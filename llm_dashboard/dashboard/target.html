@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>广告目标达成看板 · 跨境电商广告分析</title>
+<link rel="stylesheet" href="assets/common.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="logo"><span class="dot"></span>跨境电商广告分析中心</div>
+  <nav>
+    <a href="index.html">📊 广告数据看板</a>
+    <a class="active" href="target.html">🎯 目标达成看板</a>
+  </nav>
+</header>
+
+<div class="page">
+  <!-- 筛选栏 -->
+  <div class="filterbar">
+    <div class="f-item" style="min-width:340px">
+      <label>日期范围 <span style="font-weight:400;color:#9ca3af">（月目标按范围截止日所在月计算）</span></label>
+      <div id="f-date" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"></div>
+    </div>
+    <div class="f-item"><label>运营负责人</label><div id="f-owner"></div></div>
+    <div class="f-item"><label>店铺</label><div id="f-shop"></div></div>
+    <div class="f-item"><label>国家</label><div id="f-country"></div></div>
+    <div class="f-item"><label>类目</label><div id="f-cat"></div></div>
+    <div class="f-actions"><button class="btn-reset" id="btn-reset">重置筛选</button></div>
+  </div>
+
+  <!-- 模块1 总览 -->
+  <div class="sec-title"><span class="bar"></span>模块一 · 目标总览 <span class="sub" id="month-label"></span></div>
+  <div class="grid g-kpi" id="kpi-row"></div>
+  <div class="grid g-2" style="margin-top:16px">
+    <div class="card">
+      <h3>花费完成进度 vs 时间进度</h3>
+      <div id="ch-gauge" class="chart chart-sm"></div>
+    </div>
+    <div class="card">
+      <h3>费比（TACOS）目标 vs 实际</h3>
+      <div id="ch-tacos-gauge" class="chart chart-sm"></div>
+    </div>
+  </div>
+
+  <!-- 模块2 目标完成趋势 -->
+  <div class="sec-title"><span class="bar"></span>模块二 · 目标完成趋势</div>
+  <div class="grid g-2">
+    <div class="card">
+      <h3>月度花费目标完成趋势</h3>
+      <div id="ch-m-spend" class="chart"></div>
+    </div>
+    <div class="card">
+      <h3>月度费比（TACOS）完成趋势</h3>
+      <div id="ch-m-tacos" class="chart"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>类目费比目标完成率 <span class="hint">当月 · 实际TACOS ≤ 目标TACOS 为达标</span></h3>
+    <div id="ch-cat" class="chart chart-lg"></div>
+  </div>
+  <div class="grid g-2" style="margin-top:16px">
+    <div class="card">
+      <h3>负责人：花费与费比完成率排行</h3>
+      <div class="tbl-wrap" style="max-height:380px;overflow-y:auto"><table class="tbl" id="tbl-owner"></table></div>
+    </div>
+    <div class="card">
+      <h3>国家：花费与费比完成率</h3>
+      <div class="tbl-wrap" style="max-height:380px;overflow-y:auto"><table class="tbl" id="tbl-country"></table></div>
+    </div>
+  </div>
+
+  <!-- 模块3 近14天变动趋势 -->
+  <div class="sec-title"><span class="bar"></span>模块三 · 费比与花费日度变动 <span class="sub" id="d14-label"></span></div>
+  <div class="card">
+    <h3>最近 14 天 TACOS 与广告花费变化趋势</h3>
+    <div id="ch-14d" class="chart chart-lg"></div>
+  </div>
+
+  <!-- 模块4 目标差距归因 -->
+  <div class="sec-title"><span class="bar"></span>模块四 · 目标差距归因</div>
+  <div class="grid g-2">
+    <div class="card">
+      <h3>核心因素对比 <span class="hint">本期 vs 上一同长度周期</span></h3>
+      <div class="tbl-wrap"><table class="tbl" id="tbl-attr"></table></div>
+    </div>
+    <div class="card">
+      <h3>差距归因解读</h3>
+      <div class="advice" id="attr-advice"></div>
+    </div>
+  </div>
+
+  <!-- 模块5 建议 -->
+  <div class="sec-title"><span class="bar"></span>模块五 · 改进建议</div>
+  <div class="card"><div class="advice" id="advice-list"></div></div>
+</div>
+
+<script src="assets/echarts.min.js"></script>
+<script src="data/tg_data.js"></script>
+<script src="assets/common.js"></script>
+<script src="assets/target.js"></script>
+</body>
+</html>

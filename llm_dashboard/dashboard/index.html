@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>广告数据看板 · 跨境电商广告分析</title>
+<link rel="stylesheet" href="assets/common.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="logo"><span class="dot"></span>跨境电商广告分析中心</div>
+  <nav>
+    <a class="active" href="index.html">📊 广告数据看板</a>
+    <a href="target.html">🎯 目标达成看板</a>
+  </nav>
+</header>
+
+<div class="page">
+  <!-- 筛选栏 -->
+  <div class="filterbar" id="filterbar">
+    <div class="f-item" style="min-width:340px">
+      <label>日期范围</label>
+      <div id="f-date" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"></div>
+    </div>
+    <div class="f-item"><label>运营负责人</label><div id="f-owner"></div></div>
+    <div class="f-item"><label>店铺</label><div id="f-shop"></div></div>
+    <div class="f-item"><label>国家</label><div id="f-country"></div></div>
+    <div class="f-item"><label>类目</label><div id="f-cat"></div></div>
+    <div class="f-item"><label>广告组合</label><div id="f-port"></div></div>
+    <div class="f-actions"><button class="btn-reset" id="btn-reset">重置筛选</button></div>
+  </div>
+
+  <!-- 板块1 整体表现 -->
+  <div class="sec-title"><span class="bar"></span>板块一 · 整体表现 <span class="sub" id="range-label"></span></div>
+  <div class="grid g-kpi" id="kpi-row"></div>
+  <div class="grid g-2" style="margin-top:16px">
+    <div class="card">
+      <h3>各国家 ACoS 对比 <span class="hint">基准线 30%</span></h3>
+      <div id="ch-country-acos" class="chart"></div>
+    </div>
+    <div class="card">
+      <h3>广告花费与销售趋势</h3>
+      <div id="ch-trend-spend" class="chart"></div>
+    </div>
+  </div>
+  <div class="grid g-2" style="margin-top:16px">
+    <div class="card">
+      <h3>ACoS 与 CPC 趋势</h3>
+      <div id="ch-trend-acos" class="chart"></div>
+    </div>
+    <div class="card">
+      <h3>各运营负责人表现 <span class="hint">费比 = 该负责人花费 / 整体广告销售额贡献口径见注</span></h3>
+      <div class="tbl-wrap" style="max-height:320px;overflow-y:auto">
+        <table class="tbl" id="tbl-owner"></table>
+      </div>
+      <div class="footnote">注：费比 = 花费 ÷ 广告销售额（即广告口径费比）；花费占比 = 该负责人花费 ÷ 当前筛选范围总花费。</div>
+    </div>
+  </div>
+
+  <!-- 板块2 店铺/国家对比 -->
+  <div class="sec-title"><span class="bar"></span>板块二 · 店铺 / 国家对比</div>
+  <div class="card">
+    <h3>各店铺广告花费、销售额、ACoS、费比对比</h3>
+    <div id="ch-shop" class="chart chart-lg"></div>
+  </div>
+  <div class="grid g-2" style="margin-top:16px">
+    <div class="card">
+      <h3>国家维度：花费与产出</h3>
+      <div id="ch-country-io" class="chart"></div>
+    </div>
+    <div class="card">
+      <h3>店铺明细数据</h3>
+      <div class="tbl-wrap" style="max-height:320px;overflow-y:auto">
+        <table class="tbl" id="tbl-shop"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 板块3 广告类型 -->
+  <div class="sec-title"><span class="bar"></span>板块三 · 广告类型对比</div>
+  <div class="grid g-2">
+    <div class="card">
+      <h3>不同广告类型表现 <span class="hint">当前数据源仅含 SP 类型</span></h3>
+      <div id="ch-adtype" class="chart chart-sm"></div>
+    </div>
+    <div class="card">
+      <h3>广告类型明细</h3>
+      <div class="tbl-wrap"><table class="tbl" id="tbl-adtype"></table></div>
+    </div>
+  </div>
+
+  <!-- 板块4 匹配方式 -->
+  <div class="sec-title"><span class="bar"></span>板块四 · 匹配方式分析</div>
+  <div class="grid g-2">
+    <div class="card">
+      <h3>各匹配方式：花费 / 曝光 / 点击 / ACoS</h3>
+      <div id="ch-match" class="chart"></div>
+    </div>
+    <div class="card">
+      <h3>匹配方式明细</h3>
+      <div class="tbl-wrap"><table class="tbl" id="tbl-match"></table></div>
+    </div>
+  </div>
+
+  <!-- 板块5 关键词优化 -->
+  <div class="sec-title"><span class="bar"></span>板块五 · 关键词优化</div>
+  <div class="card">
+    <h3>💸 浪费花费 Top20 <span class="hint">有花费、无销售额</span></h3>
+    <div class="tbl-wrap" style="max-height:430px;overflow-y:auto"><table class="tbl" id="tbl-waste"></table></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>⚠️ 高 ACoS 待优化 Top20 <span class="hint">ACoS ≥ 30%，按花费排序</span></h3>
+    <div class="tbl-wrap" style="max-height:430px;overflow-y:auto"><table class="tbl" id="tbl-highacos"></table></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>🌟 优质词 Top20 <span class="hint">ACoS ≤ 20% 且销售额 ≥ $100</span></h3>
+    <div class="tbl-wrap" style="max-height:430px;overflow-y:auto"><table class="tbl" id="tbl-good"></table></div>
+  </div>
+
+  <!-- 板块6 建议 -->
+  <div class="sec-title"><span class="bar"></span>板块六 · 优化建议与行动措施</div>
+  <div class="card">
+    <div class="advice" id="advice-list"></div>
+  </div>
+</div>
+
+<script src="assets/echarts.min.js"></script>
+<script src="data/kw_data.js"></script>
+<script src="assets/common.js"></script>
+<script src="assets/ads.js"></script>
+</body>
+</html>
