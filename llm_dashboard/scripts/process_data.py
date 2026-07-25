@@ -46,11 +46,29 @@ def dump_js(path, varname, obj):
 # Part 1: 广告数据看板 —— 关键词报告 sheet1
 # ============================================================
 print(">>> 处理 关键词报告-每日明细 sheet1 ...")
-df = pd.read_excel(os.path.join(RES, "关键词报告-每日明细.xlsx"), sheet_name="sheet1")
+KW_XLSX = os.path.join(RES, "关键词报告-每日明细.xlsx")
+df = pd.read_excel(KW_XLSX, sheet_name="sheet1")
 df['日期'] = df['日期'].astype(str).str[:10]
 num_cols = ['曝光量', '点击', '花费-本币', '广告销售额-本币', '广告订单', '广告销量']
 for c in num_cols:
     df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
+
+# ---- 汇率转换：本币金额 -> 美元 (仅广告数据看板生效) ----
+# 汇率sheet: 国家/本币(=1)/美元 ; 换算公式 usd = local * 美元汇率
+fx_df = pd.read_excel(KW_XLSX, sheet_name="汇率")
+FX = {str(r['国家']).strip(): float(r['美元']) for _, r in fx_df.iterrows()}
+print(f"汇率表: {FX}")
+# sheet1 所有涉及本币的金额列（比率列 ACoS/ROAS/CVR/CTR 不随汇率变化，无需转换）
+local_money_cols = ['CPC-本币', '花费-本币', '广告销售额-本币', '直接销售额-本币',
+                    '间接销售额-本币', 'CPA-本币', '广告笔单价-本币']
+_rate = df['国家'].astype(str).str.strip().map(FX)
+if _rate.isna().any():
+    miss = df.loc[_rate.isna(), '国家'].unique().tolist()
+    raise ValueError(f"以下国家在汇率表中缺失，无法换算: {miss}")
+for c in local_money_cols:
+    if c in df.columns:
+        df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0) * _rate
+print("已将本币金额列换算为美元。")
 
 # 维度字典编码
 dim_cols = {

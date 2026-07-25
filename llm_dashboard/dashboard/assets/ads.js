@@ -87,7 +87,6 @@
   const chCountryAcos = makeChart('ch-country-acos');
   const chTrendSpend = makeChart('ch-trend-spend');
   const chTrendAcos = makeChart('ch-trend-acos');
-  const chShop = makeChart('ch-shop');
   const chCountryIO = makeChart('ch-country-io');
   const chAdType = makeChart('ch-adtype');
   const chMatch = makeChart('ch-match');
@@ -128,10 +127,10 @@
     const cpcP = p.cl > 0 ? p.sp / p.cl : NaN;
 
     const items = [
-      { label: '广告花费', val: F.money(t.sp), delta: ratio(t.sp, p.sp), ico: '💰', bg: '#eef1fe', goodDown: true },
-      { label: '广告销售额', val: F.money(t.sa), delta: ratio(t.sa, p.sa), ico: '🛒', bg: '#e6faf6', goodDown: false },
-      { label: 'ACoS', val: F.pct(acos), delta: diffPct(acos, acosP), ico: '📉', bg: '#fef4e6', goodDown: true, isPP: true },
-      { label: 'CPC', val: isNaN(cpc) ? '—' : '$' + cpc.toFixed(2), delta: ratio(cpc, cpcP), ico: '🖱️', bg: '#f3eefe', goodDown: true },
+      { label: '广告花费', val: F.money(t.sp), delta: ratio(t.sp, p.sp), ico: '💰', bg: '#e9eef4', goodDown: true },
+      { label: '广告销售额', val: F.money(t.sa), delta: ratio(t.sa, p.sa), ico: '🛒', bg: '#e3efeb', goodDown: false },
+      { label: 'ACoS', val: F.pct(acos), delta: diffPct(acos, acosP), ico: '📉', bg: '#f6ecd4', goodDown: true, isPP: true },
+      { label: 'CPC', val: isNaN(cpc) ? '—' : '$' + cpc.toFixed(2), delta: ratio(cpc, cpcP), ico: '🖱️', bg: '#ece8f1', goodDown: true },
     ];
     const host = document.getElementById('kpi-row');
     host.innerHTML = items.map(it => {
@@ -142,7 +141,7 @@
         // 语义: 红=不利, 绿=有利
         const arrow = up ? '▲' : down ? '▼' : '—';
         const txt = it.isPP ? Math.abs(it.delta * 100).toFixed(1) + 'pp' : Math.abs(it.delta * 100).toFixed(1) + '%';
-        dHtml = `<span class="${cls}"><b>${arrow} ${txt}</b></span><span style="color:#9ca3af">环比</span>`;
+        dHtml = `<span class="${cls}"><b>${arrow} ${txt}</b></span><span style="color:#a3a8ae">环比</span>`;
       }
       return `<div class="card kpi">
         <div class="k-ico" style="background:${it.bg}">${it.ico}</div>
@@ -172,14 +171,14 @@
       series: [{
         type: 'bar', data: arr.map(x => ({
           value: +x.acos.toFixed(4),
-          itemStyle: { color: x.acos >= 0.3 ? '#ef4444' : '#14b8a6', borderRadius: [6, 6, 0, 0] },
+          itemStyle: { color: x.acos >= 0.3 ? '#c0453e' : '#3f8f7d', borderRadius: [6, 6, 0, 0] },
         })),
         barMaxWidth: 46,
-        label: { show: true, position: 'top', fontSize: 11, color: '#6b7280', formatter: p => (p.value * 100).toFixed(1) + '%' },
+        label: { show: true, position: 'top', fontSize: 11, color: '#7a8089', formatter: p => (p.value * 100).toFixed(1) + '%' },
         markLine: {
           symbol: 'none', silent: true,
-          lineStyle: { color: '#f59e0b', type: 'dashed', width: 1.5 },
-          label: { formatter: '基准 30%', position: 'insideEndTop', color: '#f59e0b', fontSize: 11 },
+          lineStyle: { color: '#d99a3d', type: 'dashed', width: 1.5 },
+          label: { formatter: '基准 30%', position: 'insideEndTop', color: '#d99a3d', fontSize: 11 },
           data: [{ yAxis: 0.3 }],
         },
       }],
@@ -210,15 +209,23 @@
       yAxis: CH.vAxis(v => '$' + (v >= 1000 ? (v / 1000) + 'k' : v)),
       series: [
         { name: '广告花费', type: 'line', smooth: true, symbol: 'circle', symbolSize: 5, data: sp,
-          lineStyle: { width: 2.5 }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(79,110,247,.22)' }, { offset: 1, color: 'rgba(79,110,247,0)' }] } } },
+          lineStyle: { width: 2.5 }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(51,96,140,.22)' }, { offset: 1, color: 'rgba(51,96,140,0)' }] } } },
         { name: '广告销售额', type: 'line', smooth: true, symbol: 'circle', symbolSize: 5, data: sa,
-          lineStyle: { width: 2.5 }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(20,184,166,.20)' }, { offset: 1, color: 'rgba(20,184,166,0)' }] } } },
+          lineStyle: { width: 2.5 }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(63,143,125,.20)' }, { offset: 1, color: 'rgba(63,143,125,0)' }] } } },
       ],
     }), true);
+
+    // ACoS 纵轴动态范围（含 30% 基准线），让波动更明显
+    const acosVals = acos.filter(v => v != null && isFinite(v)).concat([0.3]);
+    let aMin = Math.min(...acosVals), aMax = Math.max(...acosVals);
+    if (!isFinite(aMin) || !isFinite(aMax)) { aMin = 0; aMax = 0.5; }
+    const aPad = Math.max((aMax - aMin) * 0.2, 0.02);
+    const aLo = Math.max(0, aMin - aPad), aHi = aMax + aPad;
 
     chTrendAcos.setOption(CH.base({
       tooltip: {
         trigger: 'axis', confine: true,
+        axisPointer: { type: 'cross', crossStyle: { color: '#cfccc2' } },
         formatter: ps => {
           let s = ps[0] ? ps[0].name : '';
           ps.forEach(p => {
@@ -228,17 +235,22 @@
           return s;
         },
       },
-      legend: { top: 0, data: ['ACoS', 'CPC'] },
-      grid: { left: 10, right: 42, top: 42, bottom: 10, containLabel: true },
-      xAxis: Object.assign({ type: 'category', data: xShow, boundaryGap: false }, CH.axis()),
+      legend: { top: 0, data: ['CPC', 'ACoS'] },
+      grid: { left: 10, right: 46, top: 42, bottom: 10, containLabel: true },
+      xAxis: Object.assign({ type: 'category', data: xShow, boundaryGap: true }, CH.axis()),
       yAxis: [
-        Object.assign(CH.vAxis(v => (v * 100).toFixed(0) + '%'), { name: 'ACoS', nameTextStyle: { color: '#9ca3af', fontSize: 11 } }),
-        Object.assign(CH.vAxis(v => '$' + v), { name: 'CPC', splitLine: { show: false }, nameTextStyle: { color: '#9ca3af', fontSize: 11 } }),
+        Object.assign(CH.vAxis(v => (v * 100).toFixed(0) + '%'), { name: 'ACoS', min: +aLo.toFixed(4), max: +aHi.toFixed(4), nameTextStyle: { color: '#a3a8ae', fontSize: 11 } }),
+        Object.assign(CH.vAxis(v => '$' + v), { name: 'CPC', splitLine: { show: false }, nameTextStyle: { color: '#a3a8ae', fontSize: 11 } }),
       ],
       series: [
-        { name: 'ACoS', type: 'line', smooth: true, symbol: 'circle', symbolSize: 5, data: acos, connectNulls: true, lineStyle: { width: 2.5, color: '#f59e0b' }, itemStyle: { color: '#f59e0b' },
-          markLine: { symbol: 'none', silent: true, lineStyle: { color: '#ef4444', type: 'dashed', width: 1 }, label: { formatter: '30%', color: '#ef4444', fontSize: 10 }, data: [{ yAxis: 0.3 }] } },
-        { name: 'CPC', type: 'line', yAxisIndex: 1, smooth: true, symbol: 'circle', symbolSize: 5, data: cpc, connectNulls: true, lineStyle: { width: 2.5, color: '#8b5cf6' }, itemStyle: { color: '#8b5cf6' } },
+        // CPC 用柱状（次轴），与 ACoS 折线在视觉上区分开
+        { name: 'CPC', type: 'bar', yAxisIndex: 1, data: cpc, barMaxWidth: 22,
+          itemStyle: { borderRadius: [4, 4, 0, 0], color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(138,122,168,.55)' }, { offset: 1, color: 'rgba(138,122,168,.18)' }] } } },
+        // ACoS 用平滑折线（主轴），带面积与 30% 基准线
+        { name: 'ACoS', type: 'line', smooth: true, symbol: 'circle', symbolSize: 6, data: acos, connectNulls: true, z: 5,
+          lineStyle: { width: 3, color: '#d99a3d' }, itemStyle: { color: '#d99a3d' },
+          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(217,154,61,.20)' }, { offset: 1, color: 'rgba(217,154,61,0)' }] } },
+          markLine: { symbol: 'none', silent: true, lineStyle: { color: '#c0453e', type: 'dashed', width: 1.2 }, label: { formatter: '基准 30%', position: 'insideEndTop', color: '#c0453e', fontSize: 10 }, data: [{ yAxis: 0.3 }] } },
       ],
     }), true);
   }
@@ -252,14 +264,15 @@
       .sort((a, b) => b.sp - a.sp);
     const maxSp = Math.max(...arr.map(x => x.sp), 1);
     const el = document.getElementById('tbl-owner');
-    el.innerHTML = `<thead><tr><th>负责人</th><th>花费</th><th>广告销售额</th><th>ACoS</th><th>费比</th><th>花费占比</th></tr></thead><tbody>` +
+    el.innerHTML = `<thead><tr><th>负责人</th><th>花费</th><th>广告销售额</th><th>ACoS</th><th>CVR</th><th>CPC</th><th>CTR</th></tr></thead><tbody>` +
       arr.map(x => `<tr>
         <td class="dim">${x.name}</td>
         <td><span class="bar-in-cell" style="width:${(x.sp / maxSp * 60).toFixed(0)}px"></span>${F.money(x.sp)}</td>
         <td>${F.money(x.sa)}</td>
         <td>${acosTag(x.acos)}</td>
-        <td>${F.pct(x.acos)}</td>
-        <td>${F.pct(x.share)}</td>
+        <td>${F.pct(x.cl > 0 ? x.od / x.cl : NaN)}</td>
+        <td>${F.money(x.cl > 0 ? x.sp / x.cl : NaN)}</td>
+        <td>${F.pct(x.im > 0 ? x.cl / x.im : NaN)}</td>
       </tr>`).join('') + '</tbody>';
   }
   function acosTag(v) {
@@ -269,46 +282,21 @@
     return `<span class="tag tag-green">${F.pct(v)}</span>`;
   }
 
-  /* ----- 店铺对比 ----- */
+  /* ----- 店铺对比（明细表，图表已按需求移除） ----- */
   function renderShop(cur) {
     const m = groupBy(cur, I.s);
     const arr = Array.from(m.entries())
       .map(([k, v]) => ({ name: DIM.s[k], ...v, acos: v.sa > 0 ? v.sp / v.sa : 0 }))
       .sort((a, b) => b.sp - a.sp);
-    chShop.setOption(CH.base({
-      tooltip: {
-        trigger: 'axis', confine: true,
-        formatter: ps => {
-          let s = ps[0] ? ps[0].name : '';
-          ps.forEach(p => {
-            const v = p.seriesName === 'ACoS' ? F.pct(p.value) : F.money(p.value);
-            s += `<br/>${p.marker}${p.seriesName}：<b>${v}</b>`;
-          });
-          return s;
-        },
-      },
-      legend: { top: 0, data: ['广告花费', '广告销售额', 'ACoS'] },
-      grid: { left: 10, right: 42, top: 42, bottom: 10, containLabel: true },
-      xAxis: Object.assign({ type: 'category', data: arr.map(x => x.name) }, CH.axis(arr.length > 8 ? 35 : 0)),
-      yAxis: [
-        CH.vAxis(v => '$' + (v >= 1000 ? (v / 1000) + 'k' : v)),
-        Object.assign(CH.vAxis(v => (v * 100).toFixed(0) + '%'), { splitLine: { show: false } }),
-      ],
-      series: [
-        { name: '广告花费', type: 'bar', data: arr.map(x => +x.sp.toFixed(2)), barMaxWidth: 26, itemStyle: { borderRadius: [5, 5, 0, 0] } },
-        { name: '广告销售额', type: 'bar', data: arr.map(x => +x.sa.toFixed(2)), barMaxWidth: 26, itemStyle: { borderRadius: [5, 5, 0, 0] } },
-        { name: 'ACoS', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.acos.toFixed(4)), symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#f59e0b' }, itemStyle: { color: '#f59e0b' } },
-      ],
-    }), true);
 
-    const total = sum(cur);
     const el = document.getElementById('tbl-shop');
-    el.innerHTML = `<thead><tr><th>店铺</th><th>花费</th><th>销售额</th><th>ACoS</th><th>费比</th><th>花费占比</th></tr></thead><tbody>` +
+    el.innerHTML = `<thead><tr><th>店铺</th><th>花费</th><th>销售额</th><th>ACoS</th><th>CVR</th><th>CPC</th><th>CTR</th></tr></thead><tbody>` +
       arr.map(x => `<tr>
         <td class="dim">${x.name}</td><td>${F.money(x.sp)}</td><td>${F.money(x.sa)}</td>
         <td>${acosTag(x.sa > 0 ? x.sp / x.sa : NaN)}</td>
-        <td>${F.pct(x.sa > 0 ? x.sp / x.sa : NaN)}</td>
-        <td>${F.pct(total.sp > 0 ? x.sp / total.sp : 0)}</td></tr>`).join('') + '</tbody>';
+        <td>${F.pct(x.cl > 0 ? x.od / x.cl : NaN)}</td>
+        <td>${F.money(x.cl > 0 ? x.sp / x.cl : NaN)}</td>
+        <td>${F.pct(x.im > 0 ? x.cl / x.im : NaN)}</td></tr>`).join('') + '</tbody>';
   }
 
   /* ----- 国家 花费产出 ----- */
@@ -334,12 +322,12 @@
       xAxis: Object.assign({ type: 'category', data: arr.map(x => x.name) }, CH.axis()),
       yAxis: [
         CH.vAxis(v => '$' + (v >= 1000 ? (v / 1000) + 'k' : v)),
-        Object.assign(CH.vAxis(v => v), { splitLine: { show: false }, name: 'ROAS', nameTextStyle: { color: '#9ca3af', fontSize: 11 } }),
+        Object.assign(CH.vAxis(v => v), { splitLine: { show: false }, name: 'ROAS', nameTextStyle: { color: '#a3a8ae', fontSize: 11 } }),
       ],
       series: [
         { name: '广告花费', type: 'bar', stack: null, data: arr.map(x => +x.sp.toFixed(2)), barMaxWidth: 28, itemStyle: { borderRadius: [5, 5, 0, 0] } },
-        { name: '广告销售额', type: 'bar', data: arr.map(x => +x.sa.toFixed(2)), barMaxWidth: 28, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#14b8a6' } },
-        { name: 'ROAS', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.roas.toFixed(2)), symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#8b5cf6' }, itemStyle: { color: '#8b5cf6' } },
+        { name: '广告销售额', type: 'bar', data: arr.map(x => +x.sa.toFixed(2)), barMaxWidth: 28, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#3f8f7d' } },
+        { name: 'ROAS', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.roas.toFixed(2)), symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#8a7aa8' }, itemStyle: { color: '#8a7aa8' } },
       ],
     }), true);
   }
@@ -373,9 +361,9 @@
       ],
       series: [
         { name: '花费', type: 'bar', data: arr.map(x => +x.sp.toFixed(2)), barMaxWidth: 44, itemStyle: { borderRadius: [5, 5, 0, 0] } },
-        { name: '销售额', type: 'bar', data: arr.map(x => +x.sa.toFixed(2)), barMaxWidth: 44, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#14b8a6' } },
-        { name: 'ACoS', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.acos.toFixed(4)), symbol: 'circle', symbolSize: 7, lineStyle: { color: '#f59e0b' }, itemStyle: { color: '#f59e0b' } },
-        { name: '转化率', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.cvr.toFixed(4)), symbol: 'diamond', symbolSize: 8, lineStyle: { color: '#8b5cf6' }, itemStyle: { color: '#8b5cf6' } },
+        { name: '销售额', type: 'bar', data: arr.map(x => +x.sa.toFixed(2)), barMaxWidth: 44, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#3f8f7d' } },
+        { name: 'ACoS', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.acos.toFixed(4)), symbol: 'circle', symbolSize: 7, lineStyle: { color: '#d99a3d' }, itemStyle: { color: '#d99a3d' } },
+        { name: '转化率', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.cvr.toFixed(4)), symbol: 'diamond', symbolSize: 8, lineStyle: { color: '#8a7aa8' }, itemStyle: { color: '#8a7aa8' } },
       ],
     }), true);
 
@@ -410,14 +398,14 @@
       grid: { left: 10, right: 42, top: 42, bottom: 10, containLabel: true },
       xAxis: Object.assign({ type: 'category', data: arr.map(x => x.name) }, CH.axis()),
       yAxis: [
-        Object.assign(CH.vAxis(v => v >= 1000 ? (v / 1000) + 'k' : v), { name: '花费/曝光/点击(对数)', type: 'log', logBase: 10, nameTextStyle: { color: '#9ca3af', fontSize: 10 } }),
+        Object.assign(CH.vAxis(v => v >= 1000 ? (v / 1000) + 'k' : v), { name: '花费/曝光/点击(对数)', type: 'log', logBase: 10, nameTextStyle: { color: '#a3a8ae', fontSize: 10 } }),
         Object.assign(CH.vAxis(v => (v * 100).toFixed(0) + '%'), { splitLine: { show: false } }),
       ],
       series: [
         { name: '花费', type: 'bar', data: arr.map(x => +Math.max(x.sp, 0.01).toFixed(2)), barMaxWidth: 30, itemStyle: { borderRadius: [5, 5, 0, 0] } },
-        { name: '曝光', type: 'bar', data: arr.map(x => Math.max(x.im, 1)), barMaxWidth: 30, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#06b6d4' } },
-        { name: '点击', type: 'bar', data: arr.map(x => Math.max(x.cl, 1)), barMaxWidth: 30, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#14b8a6' } },
-        { name: 'ACoS', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.acos.toFixed(4)), symbol: 'circle', symbolSize: 7, lineStyle: { color: '#f59e0b', width: 2.5 }, itemStyle: { color: '#f59e0b' } },
+        { name: '曝光', type: 'bar', data: arr.map(x => Math.max(x.im, 1)), barMaxWidth: 30, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#5f8ba3' } },
+        { name: '点击', type: 'bar', data: arr.map(x => Math.max(x.cl, 1)), barMaxWidth: 30, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#3f8f7d' } },
+        { name: 'ACoS', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.acos.toFixed(4)), symbol: 'circle', symbolSize: 7, lineStyle: { color: '#d99a3d', width: 2.5 }, itemStyle: { color: '#d99a3d' } },
       ],
     }), true);
 
@@ -446,13 +434,12 @@
   function renderKeywordTables(cur) {
     const all = kwAgg(cur);
 
-    // 浪费花费: 有花费无销售额
-    const waste = all.filter(x => x.sp > 0 && x.sa <= 0).sort((a, b) => b.sp - a.sp).slice(0, 20);
+    // 浪费花费: 有花费无销售额，且累计点击 ≥15 次（点击不足 15 次的样本量太小，暂不判定为浪费）
+    const waste = all.filter(x => x.sp > 0 && x.sa <= 0 && x.cl >= 15).sort((a, b) => b.sp - a.sp).slice(0, 20);
     fillKwTable('tbl-waste', waste, x => {
       const tips = [];
-      if (x.cl >= 10) tips.push(`累计点击 ${x.cl} 次零转化，建议<b>暂停投放</b>并复盘关键词与产品相关性`);
-      else if (x.cl >= 5) tips.push(`点击 ${x.cl} 次无转化，建议<b>降低竞价 30%~50%</b> 观察 3~5 天`);
-      else tips.push(`点击较少（${x.cl} 次），建议<b>降低竞价 20%</b> 并继续观察`);
+      if (x.cl >= 30) tips.push(`累计点击 ${x.cl} 次零转化，建议<b>直接暂停投放</b>并复盘关键词与产品相关性`);
+      else tips.push(`累计点击 ${x.cl} 次零转化，建议<b>降低竞价 30%~50%</b> 观察 3~5 天，仍无转化则暂停`);
       if (x.im > 3000 && x.cl / Math.max(x.im, 1) < 0.003) tips.push('CTR 偏低，检查主图与关键词匹配度');
       if (DIM.m[x.mm] === '广泛匹配') tips.push('广泛匹配易跑偏，可加否定词或收紧为词组/精准');
       return tips.join('；');
@@ -505,7 +492,7 @@
           <td>${isNaN(acos) ? '—' : acosTag(acos)}</td>
           <td>${F.num(x.cl)}</td>
           <td>${F.num(x.im)}</td>
-          <td class="wrap" style="font-size:12px;color:#4b5563">${adviceFn(x)}</td>
+          <td class="wrap" style="font-size:12px;color:#4a5058">${adviceFn(x)}</td>
         </tr>`;
       }).join('') + '</tbody>';
   }
@@ -541,30 +528,30 @@
 
     const items = [];
     items.push({
-      ico: '🎯', bg: '#eef1fe', tit: '整体投放效率',
+      ico: '🎯', bg: '#e9eef4', tit: '整体投放效率',
       txt: `当前范围整体 ACoS 为 <b>${F.pct(acos)}</b>${isFinite(acos) && acos >= 0.3 ? '，高于 30% 基准，需要整体控费' : isFinite(acos) && acos <= 0.2 ? '，处于健康区间，可考虑放量增长' : '，接近基准线，重点做结构优化'}。总花费 ${F.money(t.sp)}，广告销售额 ${F.money(t.sa)}，平均 CPC ${t.cl > 0 ? '$' + (t.sp / t.cl).toFixed(2) : '—'}，CVR ${F.pct(t.cl > 0 ? t.od / t.cl : 0)}。`,
     });
     items.push({
-      ico: '✂️', bg: '#fee2e2', tit: '止损：清理无效花费',
+      ico: '✂️', bg: '#f4e3e1', tit: '止损：清理无效花费',
       txt: `共有 <b>${wasteArr.length}</b> 个关键词有花费无产出，合计浪费 <b>${F.money(wasteSp)}</b>（占总花费 ${F.pct(t.sp > 0 ? wasteSp / t.sp : 0)}）。建议每周固定复盘，点击≥10 次零转化的词直接暂停，其余先降竞价 30% 观察；同时在广泛匹配活动中批量添加否定关键词，从源头减少无效点击。`,
     });
     items.push({
-      ico: '🔧', bg: '#fef3c7', tit: '控费：压降高 ACoS 花费',
+      ico: '🔧', bg: '#f6ecd4', tit: '控费：压降高 ACoS 花费',
       txt: `ACoS≥30% 的关键词共 <b>${highArr.length}</b> 个，花费 <b>${F.money(highSp)}</b>（占比 ${F.pct(t.sp > 0 ? highSp / t.sp : 0)}）。按"目标 ACoS 30%"反推逐词下调竞价（降幅 = 1 − 30%/当前 ACoS），并对 CVR&lt;5% 的词优先做 Listing 转化优化而非单纯调价。`,
     });
     items.push({
-      ico: '🚀', bg: '#d1fae5', tit: '放量：优质词扩量',
+      ico: '🚀', bg: '#e2efe6', tit: '放量：优质词扩量',
       txt: `优质词（ACoS≤20% 且销售额≥$100）共 <b>${goodArr.length}</b> 个。建议整体提高竞价 10%~20% 抢占搜索首位，单独建立精准匹配活动并给足预算；表现最好的词可同步开 SB 品牌广告与 SD 再营销，构建流量矩阵。`,
     });
     if (bestM && worstM && bestM.name !== worstM.name) {
       items.push({
-        ico: '🧭', bg: '#e0f2fe', tit: '结构：匹配方式调优',
+        ico: '🧭', bg: '#e2eaf3', tit: '结构：匹配方式调优',
         txt: `当前 <b>${bestM.name}</b> 效率最高（ACoS ${isFinite(bestM.acos) ? F.pct(bestM.acos) : '—'}），<b>${worstM.name}</b> 最低（${isFinite(worstM.acos) ? 'ACoS ' + F.pct(worstM.acos) : '无销售'}）。建议将预算逐步向高效匹配方式倾斜，用广泛匹配跑词、词组/精准收割的漏斗打法，控制广泛匹配预算占比。`,
       });
     }
     if (badCountries.length) {
       items.push({
-        ico: '🌍', bg: '#fce7f3', tit: '市场：重点关注国家',
+        ico: '🌍', bg: '#f0e4e8', tit: '市场：重点关注国家',
         txt: `以下国家 ACoS 超过 30% 基准：<b>${badCountries.join('、')}</b>。建议按国家做深度诊断：检查当地定价与竞品、旺季节奏及关键词本地化质量，必要时收缩预算保利润。`,
       });
     }

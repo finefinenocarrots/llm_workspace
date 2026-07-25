@@ -10,8 +10,7 @@
     },
     money(v, d) {
       if (v == null || isNaN(v) || !isFinite(v)) return '—';
-      const abs = Math.abs(v);
-      if (d == null) d = abs >= 1000 ? 0 : 2;
+      if (d == null) d = 2;
       return '$' + F.num(v, d);
     },
     moneyK(v) {
@@ -153,7 +152,7 @@
       });
       const di = document.createElement('div');
       di.className = 'date-inputs';
-      di.innerHTML = '<input type="date" class="d-start"><span style="color:#9ca3af">~</span><input type="date" class="d-end">';
+      di.innerHTML = '<input type="date" class="d-start"><span style="color:#a3a8ae">~</span><input type="date" class="d-end">';
       this.host.appendChild(seg);
       this.host.appendChild(di);
       this.seg = seg;
@@ -192,32 +191,33 @@
 
   /* ---------- ECharts 主题基础 ---------- */
   const CH = {
-    colors: ['#4f6ef7', '#14b8a6', '#f59e0b', '#8b5cf6', '#ef4444', '#10b981', '#06b6d4', '#f97316', '#ec4899', '#84cc16'],
+    /* 低饱和编辑风色板：墨蓝 / 青绿 / 赭黄 / 灰紫 / 砖红 / 橄榄 / 灰青 / 陶橙 / 玫灰 / 苔绿 */
+    colors: ['#33608c', '#3f8f7d', '#d99a3d', '#8a7aa8', '#c0453e', '#7d9155', '#5f8ba3', '#c67b52', '#a86f7c', '#8f9d3f'],
     base(extra) {
       return Object.assign({
         color: CH.colors,
-        textStyle: { fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif', color: '#374151' },
+        textStyle: { fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif', color: '#3d434b' },
         grid: { left: 10, right: 14, top: 42, bottom: 10, containLabel: true },
         tooltip: {
-          trigger: 'axis', backgroundColor: 'rgba(255,255,255,.96)',
-          borderColor: '#e5e9f2', textStyle: { color: '#1f2937', fontSize: 12 },
-          confine: true, axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(79,110,247,.06)' } },
+          trigger: 'axis', backgroundColor: 'rgba(255,255,255,.97)',
+          borderColor: '#e7e4dc', textStyle: { color: '#262b33', fontSize: 12 },
+          confine: true, axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(51,96,140,.06)' } },
         },
-        legend: { top: 0, left: 0, itemWidth: 14, itemHeight: 9, textStyle: { fontSize: 12, color: '#6b7280' } },
+        legend: { top: 0, left: 0, itemWidth: 14, itemHeight: 9, textStyle: { fontSize: 12, color: '#7a8089' } },
       }, extra || {});
     },
     axis(rotate) {
       return {
-        axisLine: { lineStyle: { color: '#e5e9f2' } },
+        axisLine: { lineStyle: { color: '#e7e4dc' } },
         axisTick: { show: false },
-        axisLabel: { color: '#6b7280', fontSize: 11, rotate: rotate || 0, hideOverlap: true },
+        axisLabel: { color: '#7a8089', fontSize: 11, rotate: rotate || 0, hideOverlap: true },
       };
     },
     vAxis(fmt) {
       return {
         type: 'value',
-        splitLine: { lineStyle: { color: '#f0f2f8' } },
-        axisLabel: { color: '#6b7280', fontSize: 11, formatter: fmt },
+        splitLine: { lineStyle: { color: '#efede6' } },
+        axisLabel: { color: '#7a8089', fontSize: 11, formatter: fmt },
       };
     },
   };

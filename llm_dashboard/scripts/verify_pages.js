@@ -10,9 +10,10 @@ const puppeteer = require('puppeteer-core');
     userDataDir: udd,
     args: ['--no-sandbox', '--disable-gpu', '--no-first-run', '--disable-extensions', '--disable-background-networking'],
   });
+  const BASE = process.env.BASE_URL || 'http://localhost:8765';
   const pages = [
-    { url: 'http://localhost:8765/index.html', shot: 'D:/workspace/llm_dashboard/scripts/shot_index.png' },
-    { url: 'http://localhost:8765/target.html', shot: 'D:/workspace/llm_dashboard/scripts/shot_target.png' },
+    { url: BASE + '/index.html', shot: 'D:/workspace/llm_dashboard/scripts/shot_index.png' },
+    { url: BASE + '/target.html', shot: 'D:/workspace/llm_dashboard/scripts/shot_target.png' },
   ];
   let hasError = false;
   for (const p of pages) {

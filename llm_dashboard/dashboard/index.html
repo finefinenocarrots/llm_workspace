@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>广告数据看板 · 跨境电商广告分析</title>
-<link rel="stylesheet" href="assets/common.css">
+<link rel="stylesheet" href="assets/common.css?v=20260725ui8">
 </head>
 <body>
 <header class="topbar">
   <div class="logo"><span class="dot"></span>跨境电商广告分析中心</div>
   <nav>
-    <a class="active" href="index.html">📊 广告数据看板</a>
-    <a href="target.html">🎯 目标达成看板</a>
+    <a class="active" href="index.html">广告数据看板</a>
+    <a href="target.html">目标达成看板</a>
   </nav>
 </header>
 
@@ -49,21 +49,17 @@
       <div id="ch-trend-acos" class="chart"></div>
     </div>
     <div class="card">
-      <h3>各运营负责人表现 <span class="hint">费比 = 该负责人花费 / 整体广告销售额贡献口径见注</span></h3>
+      <h3>各运营负责人表现 <span class="hint">按花费降序 · CVR/CPC/CTR 为该负责人聚合口径</span></h3>
       <div class="tbl-wrap" style="max-height:320px;overflow-y:auto">
         <table class="tbl" id="tbl-owner"></table>
       </div>
-      <div class="footnote">注：费比 = 花费 ÷ 广告销售额（即广告口径费比）；花费占比 = 该负责人花费 ÷ 当前筛选范围总花费。</div>
+      <div class="footnote">注：CVR = 广告订单 ÷ 点击；CPC = 花费 ÷ 点击；CTR = 点击 ÷ 曝光。均为当前筛选范围内聚合计算。</div>
     </div>
   </div>
 
   <!-- 板块2 店铺/国家对比 -->
   <div class="sec-title"><span class="bar"></span>板块二 · 店铺 / 国家对比</div>
-  <div class="card">
-    <h3>各店铺广告花费、销售额、ACoS、费比对比</h3>
-    <div id="ch-shop" class="chart chart-lg"></div>
-  </div>
-  <div class="grid g-2" style="margin-top:16px">
+  <div class="grid g-2">
     <div class="card">
       <h3>国家维度：花费与产出</h3>
       <div id="ch-country-io" class="chart"></div>
@@ -105,7 +101,7 @@
   <!-- 板块5 关键词优化 -->
   <div class="sec-title"><span class="bar"></span>板块五 · 关键词优化</div>
   <div class="card">
-    <h3>💸 浪费花费 Top20 <span class="hint">有花费、无销售额</span></h3>
+    <h3>💸 浪费花费 Top20 <span class="hint">有花费、无销售额，且累计点击 ≥15 次（点击不足 15 次暂不纳入）</span></h3>
     <div class="tbl-wrap" style="max-height:430px;overflow-y:auto"><table class="tbl" id="tbl-waste"></table></div>
   </div>
   <div class="card" style="margin-top:16px">
@@ -125,8 +121,8 @@
 </div>
 
 <script src="assets/echarts.min.js"></script>
-<script src="data/kw_data.js"></script>
-<script src="assets/common.js"></script>
-<script src="assets/ads.js"></script>
+<script src="data/kw_data.js?v=20260725ui8"></script>
+<script src="assets/common.js?v=20260725ui8"></script>
+<script src="assets/ads.js?v=20260725ui8"></script>
 </body>
 </html>

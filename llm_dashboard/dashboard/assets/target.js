@@ -160,17 +160,17 @@
   /* ----- KPI ----- */
   function renderKpis(tgt, tgtTacos, spendRate, tacosRate, timeProg, dev, act, actTacos) {
     const items = [
-      { label: '实际花费', val: F.money(act.adsp), sub: `目标花费 ${F.money(tgt.tp)}`, ico: '🎯', bg: '#eef1fe' },
-      { label: '实际费比 TACOS', val: F.pct(actTacos), sub: `目标费比 ${F.pct(tgtTacos)}`, ico: '📐', bg: '#e6faf6' },
-      { label: '实际 ACOS', val: F.pct(act.adsa > 0 ? act.adsp / act.adsa : NaN), sub: `广告销售额 ${F.money(act.adsa)}`, ico: '📊', bg: '#fff1f2' },
-      { label: '实际 CPC', val: act.clk > 0 ? '$' + (act.adsp / act.clk).toFixed(2) : '—', sub: `点击量 ${F.num(act.clk)}`, ico: '🖱️', bg: '#ecfdf5' },
-      { label: '花费完成率', val: F.pct(spendRate), sub: progressBar(spendRate), ico: '💰', bg: '#fef4e6' },
-      { label: '费比完成率', val: F.pct(tacosRate), sub: isFinite(tacosRate) ? (tacosRate >= 1 ? '<span class="tag tag-green">费比达标</span>' : '<span class="tag tag-red">费比超标</span>') : '—', ico: '📏', bg: '#f3eefe' },
-      { label: '时间进度', val: F.pct(timeProg), sub: progressBar(timeProg, 'good'), ico: '⏱️', bg: '#e0f2fe' },
+      { label: '实际花费', val: F.money(act.adsp), sub: `目标花费 ${F.money(tgt.tp)}`, ico: '🎯', bg: '#e9eef4' },
+      { label: '实际费比 TACOS', val: F.pct(actTacos), sub: `目标费比 ${F.pct(tgtTacos)}`, ico: '📐', bg: '#e3efeb' },
+      { label: '实际 ACOS', val: F.pct(act.adsa > 0 ? act.adsp / act.adsa : NaN), sub: `广告销售额 ${F.money(act.adsa)}`, ico: '📊', bg: '#f4e3e1' },
+      { label: '实际 CPC', val: act.clk > 0 ? '$' + (act.adsp / act.clk).toFixed(2) : '—', sub: `点击量 ${F.num(act.clk)}`, ico: '🖱️', bg: '#e2efe6' },
+      { label: '花费完成率', val: F.pct(spendRate), sub: progressBar(spendRate), ico: '💰', bg: '#f6ecd4' },
+      { label: '费比完成率', val: F.pct(tacosRate), sub: isFinite(tacosRate) ? (tacosRate >= 1 ? '<span class="tag tag-green">费比达标</span>' : '<span class="tag tag-red">费比超标</span>') : '—', ico: '📏', bg: '#ece8f1' },
+      { label: '时间进度', val: F.pct(timeProg), sub: progressBar(timeProg, 'good'), ico: '⏱️', bg: '#e2eaf3' },
       {
         label: '进度偏差', val: F.signPct(dev),
         sub: dev > 0.03 ? '<span class="tag tag-orange">花费超前</span>' : dev < -0.03 ? '<span class="tag tag-blue">花费滞后</span>' : '<span class="tag tag-green">节奏正常</span>',
-        ico: dev > 0.03 ? '⚡' : dev < -0.03 ? '🐢' : '✅', bg: '#fce7f3',
+        ico: dev > 0.03 ? '⚡' : dev < -0.03 ? '🐢' : '✅', bg: '#f0e4e8',
       },
     ];
     document.getElementById('kpi-row').innerHTML = items.map(it => `
@@ -185,7 +185,7 @@
     if (!isFinite(v)) return '—';
     const w = Math.min(v * 100, 100).toFixed(1);
     const c = cls || (v > 1.05 ? 'warn' : '');
-    return `<div class="prog-wrap" style="width:100%"><div class="prog"><i class="${c}" style="width:${w}%"></i></div><span style="font-size:11px;color:#9ca3af">${F.pct(v)}</span></div>`;
+    return `<div class="prog-wrap" style="width:100%"><div class="prog"><i class="${c}" style="width:${w}%"></i></div><span style="font-size:11px;color:#a3a8ae">${F.pct(v)}</span></div>`;
   }
 
   /* ----- 仪表盘 ----- */
@@ -193,39 +193,39 @@
     chGauge.setOption({
       series: [{
         type: 'gauge', startAngle: 200, endAngle: -20, min: 0, max: 1.2, radius: '95%', center: ['50%', '62%'],
-        progress: { show: true, width: 16, roundCap: true, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [{ offset: 0, color: '#4f6ef7' }, { offset: 1, color: '#8b5cf6' }] } } },
-        axisLine: { lineStyle: { width: 16, color: [[1, '#eef0f7']] } },
+        progress: { show: true, width: 16, roundCap: true, itemStyle: { color: '#33608c' } },
+        axisLine: { lineStyle: { width: 16, color: [[1, '#edeae3']] } },
         axisTick: { show: false }, splitLine: { show: false },
-        axisLabel: { distance: -46, color: '#9ca3af', fontSize: 10, formatter: v => (v * 100).toFixed(0) + '%' },
+        axisLabel: { distance: -46, color: '#a3a8ae', fontSize: 10, formatter: v => (v * 100).toFixed(0) + '%' },
         pointer: { show: false },
         anchor: { show: false },
-        title: { show: true, offsetCenter: [0, '32%'], fontSize: 13, color: '#6b7280' },
-        detail: { valueAnimation: true, offsetCenter: [0, '0%'], fontSize: 30, fontWeight: 700, color: '#1f2937', formatter: v => (v * 100).toFixed(1) + '%' },
+        title: { show: true, offsetCenter: [0, '32%'], fontSize: 13, color: '#7a8089' },
+        detail: { valueAnimation: true, offsetCenter: [0, '0%'], fontSize: 30, fontWeight: 700, color: '#262b33', formatter: v => (v * 100).toFixed(1) + '%' },
         data: [{ value: isFinite(spendRate) ? +spendRate.toFixed(4) : 0, name: '花费完成率' }],
         markPoint: { data: [] },
       }, {
         type: 'gauge', startAngle: 200, endAngle: -20, min: 0, max: 1.2, radius: '95%', center: ['50%', '62%'],
         progress: { show: false }, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
-        pointer: { show: true, length: '58%', width: 4, itemStyle: { color: '#f59e0b' } },
-        detail: { show: false }, title: { show: true, offsetCenter: [0, '58%'], fontSize: 11, color: '#f59e0b' },
+        pointer: { show: true, length: '58%', width: 4, itemStyle: { color: '#d99a3d' } },
+        detail: { show: false }, title: { show: true, offsetCenter: [0, '58%'], fontSize: 11, color: '#d99a3d' },
         data: [{ value: +timeProg.toFixed(4), name: `⏱ 时间进度 ${F.pct(timeProg)}` }],
       }],
     }, true);
 
     const bars = [
-      { name: '目标 TACOS', value: isFinite(tgtTacos) ? +(tgtTacos * 100).toFixed(2) : 0, color: '#14b8a6' },
-      { name: '实际 TACOS', value: isFinite(actTacos) ? +(actTacos * 100).toFixed(2) : 0, color: (actTacos <= tgtTacos ? '#4f6ef7' : '#ef4444') },
+      { name: '目标 TACOS', value: isFinite(tgtTacos) ? +(tgtTacos * 100).toFixed(2) : 0, color: '#3f8f7d' },
+      { name: '实际 TACOS', value: isFinite(actTacos) ? +(actTacos * 100).toFixed(2) : 0, color: (actTacos <= tgtTacos ? '#33608c' : '#c0453e') },
     ];
     chTacosG.setOption(CH.base({
       tooltip: { trigger: 'axis', confine: true, formatter: ps => ps.map(p => `${p.marker}${p.name}：<b>${p.value}%</b>`).join('<br/>') },
       legend: { show: false },
       grid: { left: 10, right: 30, top: 20, bottom: 10, containLabel: true },
-      xAxis: Object.assign({ type: 'value', axisLabel: { formatter: '{value}%', color: '#6b7280', fontSize: 11 }, splitLine: { lineStyle: { color: '#f0f2f8' } } }),
+      xAxis: Object.assign({ type: 'value', axisLabel: { formatter: '{value}%', color: '#7a8089', fontSize: 11 }, splitLine: { lineStyle: { color: '#efede6' } } }),
       yAxis: Object.assign({ type: 'category', data: bars.map(b => b.name) }, CH.axis()),
       series: [{
         type: 'bar', barMaxWidth: 34,
         data: bars.map(b => ({ value: b.value, itemStyle: { color: b.color, borderRadius: [0, 7, 7, 0] } })),
-        label: { show: true, position: 'right', formatter: '{c}%', color: '#374151', fontWeight: 600 },
+        label: { show: true, position: 'right', formatter: '{c}%', color: '#3d434b', fontWeight: 600 },
       }],
     }), true);
   }
@@ -239,8 +239,8 @@
       const mS = `${y}-${String(mo).padStart(2, '0')}-01`;
       const mE = `${y}-${String(mo).padStart(2, '0')}-${String(new Date(y, mo, 0).getDate()).padStart(2, '0')}`;
       const a = sumD(filterDaily(mS, mE > MAX_D ? MAX_D : mE, ds));
-      tgtSp.push(+t.tp.toFixed(0));
-      actSp.push(+a.adsp.toFixed(0));
+      tgtSp.push(+t.tp.toFixed(2));
+      actSp.push(+a.adsp.toFixed(2));
       rate.push(t.tp > 0 ? +(a.adsp / t.tp).toFixed(4) : null);
       tgtTc.push(t.ts > 0 ? +(t.tp / t.ts).toFixed(4) : null);
       actTc.push(a.sales > 0 ? +(a.adsp / a.sales).toFixed(4) : null);
@@ -266,9 +266,9 @@
         Object.assign(CH.vAxis(v => (v * 100).toFixed(0) + '%'), { splitLine: { show: false } }),
       ],
       series: [
-        { name: '目标花费', type: 'bar', data: tgtSp, barMaxWidth: 30, itemStyle: { color: '#c7d2fe', borderRadius: [5, 5, 0, 0] } },
-        { name: '实际花费', type: 'bar', data: actSp, barMaxWidth: 30, itemStyle: { color: '#4f6ef7', borderRadius: [5, 5, 0, 0] } },
-        { name: '完成率', type: 'line', yAxisIndex: 1, data: rate, symbol: 'circle', symbolSize: 7, lineStyle: { width: 2.5, color: '#f59e0b' }, itemStyle: { color: '#f59e0b' }, label: { show: true, fontSize: 10, color: '#f59e0b', formatter: p => p.value == null ? '' : (p.value * 100).toFixed(0) + '%' } },
+        { name: '目标花费', type: 'bar', data: tgtSp, barMaxWidth: 30, itemStyle: { color: '#b9c9d9', borderRadius: [5, 5, 0, 0] } },
+        { name: '实际花费', type: 'bar', data: actSp, barMaxWidth: 30, itemStyle: { color: '#33608c', borderRadius: [5, 5, 0, 0] } },
+        { name: '完成率', type: 'line', yAxisIndex: 1, data: rate, symbol: 'circle', symbolSize: 7, lineStyle: { width: 2.5, color: '#d99a3d' }, itemStyle: { color: '#d99a3d' }, label: { show: true, fontSize: 10, color: '#d99a3d', formatter: p => p.value == null ? '' : (p.value * 100).toFixed(0) + '%' } },
       ],
     }), true);
 
@@ -287,9 +287,9 @@
       xAxis: Object.assign({ type: 'category', data: labels, boundaryGap: false }, CH.axis()),
       yAxis: Object.assign(CH.vAxis(v => (v * 100).toFixed(1) + '%'), tcVals.length ? { min: tcMin, max: tcMax } : {}),
       series: [
-        { name: '目标 TACOS', type: 'line', data: tgtTc, smooth: true, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, type: 'dashed', color: '#14b8a6' }, itemStyle: { color: '#14b8a6' } },
-        { name: '实际 TACOS', type: 'line', data: actTc, smooth: true, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#4f6ef7' }, itemStyle: { color: '#4f6ef7' },
-          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(79,110,247,.15)' }, { offset: 1, color: 'rgba(79,110,247,0)' }] } } },
+        { name: '目标 TACOS', type: 'line', data: tgtTc, smooth: true, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, type: 'dashed', color: '#3f8f7d' }, itemStyle: { color: '#3f8f7d' } },
+        { name: '实际 TACOS', type: 'line', data: actTc, smooth: true, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#33608c' }, itemStyle: { color: '#33608c' },
+          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(51,96,140,.15)' }, { offset: 1, color: 'rgba(51,96,140,0)' }] } } },
       ],
     }), true);
   }
@@ -334,9 +334,9 @@
       yAxis: CH.vAxis(v => (v * 100).toFixed(0) + '%'),
       series: [{
         type: 'bar', barMaxWidth: 34,
-        data: top.map(x => ({ value: +x.rate.toFixed(4), itemStyle: { color: x.rate >= 1 ? '#10b981' : '#ef4444', borderRadius: [6, 6, 0, 0] } })),
-        label: { show: true, position: 'top', fontSize: 10, color: '#6b7280', formatter: p => (p.value * 100).toFixed(0) + '%' },
-        markLine: { symbol: 'none', silent: true, lineStyle: { color: '#f59e0b', type: 'dashed' }, label: { formatter: '达标线 100%', color: '#f59e0b', fontSize: 11 }, data: [{ yAxis: 1 }] },
+        data: top.map(x => ({ value: +x.rate.toFixed(4), itemStyle: { color: x.rate >= 1 ? '#3a8f6c' : '#c0453e', borderRadius: [6, 6, 0, 0] } })),
+        label: { show: true, position: 'top', fontSize: 10, color: '#7a8089', formatter: p => (p.value * 100).toFixed(0) + '%' },
+        markLine: { symbol: 'none', silent: true, lineStyle: { color: '#d99a3d', type: 'dashed' }, label: { formatter: '达标线 100%', color: '#d99a3d', fontSize: 11 }, data: [{ yAxis: 1 }] },
       }],
     }), true);
   }
@@ -410,7 +410,7 @@
     xs.forEach(x => {
       const di = dates.indexOf(x);
       const v = di >= 0 ? m.get(di) : null;
-      sp.push(v ? +v.adsp.toFixed(0) : 0);
+      sp.push(v ? +v.adsp.toFixed(2) : 0);
       tc.push(v && v.sales > 0 ? +(v.adsp / v.sales).toFixed(4) : null);
     });
     ch14d.setOption(CH.base({
@@ -430,9 +430,9 @@
         Object.assign(CH.vAxis(v => (v * 100).toFixed(1) + '%'), { splitLine: { show: false } }),
       ],
       series: [
-        { name: '广告花费', type: 'bar', data: sp, barMaxWidth: 26, itemStyle: { borderRadius: [5, 5, 0, 0], color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#6d8bfa' }, { offset: 1, color: '#4f6ef7' }] } } },
-        { name: 'TACOS', type: 'line', yAxisIndex: 1, data: tc, connectNulls: true, smooth: true, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#f59e0b' }, itemStyle: { color: '#f59e0b' },
-          label: { show: true, fontSize: 10, color: '#f59e0b', formatter: p => p.value == null ? '' : (p.value * 100).toFixed(1) + '%' } },
+        { name: '广告花费', type: 'bar', data: sp, barMaxWidth: 26, itemStyle: { borderRadius: [5, 5, 0, 0], color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#4f7099' }, { offset: 1, color: '#33608c' }] } } },
+        { name: 'TACOS', type: 'line', yAxisIndex: 1, data: tc, connectNulls: true, smooth: true, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#d99a3d' }, itemStyle: { color: '#d99a3d' },
+          label: { show: true, fontSize: 10, color: '#d99a3d', formatter: p => p.value == null ? '' : (p.value * 100).toFixed(1) + '%' } },
       ],
     }), true);
   }
@@ -490,27 +490,27 @@
     const items = [];
 
     items.push({
-      ico: '📊', bg: '#eef1fe', tit: `花费差距：${gap >= 0 ? '尚有 ' + F.money(gap) + ' 未投出' : '已超出目标 ' + F.money(-gap)}`,
+      ico: '📊', bg: '#e9eef4', tit: `花费差距：${gap >= 0 ? '尚有 ' + F.money(gap) + ' 未投出' : '已超出目标 ' + F.money(-gap)}`,
       txt: `花费完成率 ${F.pct(spendRate)} vs 时间进度 ${F.pct(timeProg)}。${spendRate < timeProg - 0.03 ? '投放节奏偏慢，主要受预算释放不足或竞价保守影响，需检查预算是否提前触顶、核心词竞价是否过低。' : spendRate > timeProg + 0.03 ? '投放节奏偏快，若月底前维持当前日花费将超出目标，需关注低效活动的预算回收。' : '花费节奏与时间进度基本匹配。'}`,
     });
     if (isFinite(cpcC) && isFinite(cpcP)) {
       const d = cpcC / cpcP - 1;
       items.push({
-        ico: '🖱️', bg: '#fef3c7', tit: `CPC ${d > 0.02 ? '上涨' : d < -0.02 ? '下降' : '稳定'}：$${cpcP.toFixed(2)} → $${cpcC.toFixed(2)}（${F.signPct(d)}）`,
+        ico: '🖱️', bg: '#f6ecd4', tit: `CPC ${d > 0.02 ? '上涨' : d < -0.02 ? '下降' : '稳定'}：$${cpcP.toFixed(2)} → $${cpcC.toFixed(2)}（${F.signPct(d)}）`,
         txt: d > 0.02 ? 'CPC 上升推高花费、抬升费比。同等预算下点击减少，需甄别是竞争加剧还是竞价过高，可对高 CPC 低产出词降价。' : d < -0.02 ? 'CPC 下降利于费比改善，同预算可获取更多点击，可将节省预算投向优质词扩量。' : 'CPC 保持稳定，对差距影响有限。',
       });
     }
     if (isFinite(cvrC) && isFinite(cvrP)) {
       const d = cvrC - cvrP;
       items.push({
-        ico: '🔄', bg: '#e6faf6', tit: `转化率 ${d > 0.002 ? '提升' : d < -0.002 ? '下滑' : '持平'}：${F.pct(cvrP)} → ${F.pct(cvrC)}`,
+        ico: '🔄', bg: '#e3efeb', tit: `转化率 ${d > 0.002 ? '提升' : d < -0.002 ? '下滑' : '持平'}：${F.pct(cvrP)} → ${F.pct(cvrC)}`,
         txt: d < -0.002 ? '转化率下滑是费比恶化的核心因素之一：同样点击带来更少订单。优先检查价格竞争力、Listing 评分变化、库存状态与差评。' : d > 0.002 ? '转化率提升摊薄了单位获客成本，是费比改善的正向因素，可顺势加大投放。' : '转化率基本稳定。',
       });
     }
     if (isFinite(clkC) && isFinite(clkP) && clkP > 0) {
       const d = clkC / clkP - 1;
       items.push({
-        ico: '👆', bg: '#f3eefe', tit: `流量（点击）${d > 0.02 ? '增长' : d < -0.02 ? '收缩' : '持平'}：${F.num(clkP)} → ${F.num(clkC)}（${F.signPct(d)}）`,
+        ico: '👆', bg: '#ece8f1', tit: `流量（点击）${d > 0.02 ? '增长' : d < -0.02 ? '收缩' : '持平'}：${F.num(clkP)} → ${F.num(clkC)}（${F.signPct(d)}）`,
         txt: d < -0.02 ? '点击量收缩直接拖累广告花费投出与销售产出，检查预算触顶时段、广告位竞得率及关键词覆盖是否收窄。' : d > 0.02 ? '点击量增长带动花费投出，若转化率同步稳定则花费完成率将持续提升。' : '流量规模变化不大。',
       });
     }
@@ -523,40 +523,40 @@
   function renderAdvice(spendRate, tacosRate, timeProg, dev, tgtTacos, actTacos, act, tgt) {
     const items = [];
     if (!isFinite(spendRate)) {
-      items.push({ ico: 'ℹ️', bg: '#e0f2fe', tit: '暂无目标数据', txt: '当前筛选范围内未匹配到月度目标，请调整筛选条件（目标数据覆盖 2026 年 4–7 月）。' });
+      items.push({ ico: 'ℹ️', bg: '#e2eaf3', tit: '暂无目标数据', txt: '当前筛选范围内未匹配到月度目标，请调整筛选条件（目标数据覆盖 2026 年 4–7 月）。' });
     } else if (dev < -0.05) {
       items.push({
-        ico: '⏩', bg: '#e0f2fe', tit: '花费投放提速',
+        ico: '⏩', bg: '#e2eaf3', tit: '花费投放提速',
         txt: `花费完成率 ${F.pct(spendRate)} 落后时间进度 ${F.pct(timeProg)} 约 ${F.pct(Math.abs(dev))}。建议：① 核查每日预算是否提前触顶，触顶活动加预算 20%~30%；② 对优质词提高竞价抢量；③ 补充新词/新活动扩大覆盖，优先投向费比完成率高的类目与国家。`,
       });
     } else if (dev > 0.05) {
       items.push({
-        ico: '🛑', bg: '#fee2e2', tit: '控制投放节奏',
+        ico: '🛑', bg: '#f4e3e1', tit: '控制投放节奏',
         txt: `花费完成率 ${F.pct(spendRate)} 超前时间进度 ${F.pct(Math.abs(dev))}，按当前日均花费月底将超支约 ${F.money(Math.max(act.adsp / Math.max(timeProg, 0.01) - tgt.tp, 0))}。建议对 ACoS 高于基准的活动下调预算与竞价，回收低效花费，保住月度费比目标。`,
       });
     } else {
-      items.push({ ico: '✅', bg: '#d1fae5', tit: '投放节奏健康', txt: `花费完成率与时间进度偏差仅 ${F.signPct(dev)}，保持当前投放节奏即可，重点转向结构性优化（词级调价、时段分配）。` });
+      items.push({ ico: '✅', bg: '#e2efe6', tit: '投放节奏健康', txt: `花费完成率与时间进度偏差仅 ${F.signPct(dev)}，保持当前投放节奏即可，重点转向结构性优化（词级调价、时段分配）。` });
     }
     if (isFinite(tacosRate)) {
       if (tacosRate < 0.85) {
         items.push({
-          ico: '🚨', bg: '#fee2e2', tit: '费比明显超标，优先控费',
+          ico: '🚨', bg: '#f4e3e1', tit: '费比明显超标，优先控费',
           txt: `实际 TACOS ${F.pct(actTacos)} 显著高于目标 ${F.pct(tgtTacos)}（完成率 ${F.pct(tacosRate)}）。行动：① 立即暂停零转化高花费词；② 高 ACoS 词按“1 − 目标/实际”幅度降竞价；③ 自然流量占比过低的 SKU 排查 Listing 权重，广告依赖度过高需做站外/秒杀拉自然单。`,
         });
       } else if (tacosRate < 1) {
         items.push({
-          ico: '⚠️', bg: '#fef3c7', tit: '费比小幅超标，结构调优',
+          ico: '⚠️', bg: '#f6ecd4', tit: '费比小幅超标，结构调优',
           txt: `实际 TACOS ${F.pct(actTacos)} 略高于目标 ${F.pct(tgtTacos)}。差距不大，通过词级精细化即可收敛：压缩广泛匹配低效流量、优化否定词库、把预算向费比达标的类目/国家倾斜。`,
         });
       } else {
         items.push({
-          ico: '🏆', bg: '#d1fae5', tit: '费比达标，可适度放量',
+          ico: '🏆', bg: '#e2efe6', tit: '费比达标，可适度放量',
           txt: `实际 TACOS ${F.pct(actTacos)} 优于目标 ${F.pct(tgtTacos)}，有 ${F.pct(Math.max(tacosRate - 1, 0))} 的余量。在守住费比红线的前提下，可对优质词与达标类目增加预算，换取更高的销售规模与自然位权重。`,
         });
       }
     }
     items.push({
-      ico: '📅', bg: '#eef1fe', tit: '月末冲刺机制',
+      ico: '📅', bg: '#e9eef4', tit: '月末冲刺机制',
       txt: '建议每周一复盘各负责人花费/费比完成率排行（见模块二），落后者提交改进计划；月末最后一周锁定预算分配，避免为冲花费完成率而牺牲费比。',
     });
     document.getElementById('advice-list').innerHTML = items.map(it =>
