@@ -27,11 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # enablement 让首次运行时自动开启仓库的 Pages 功能，无需手动在设置页配置
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
+      # Pages 站点需在仓库 Settings → Pages 中将 Source 设为 "GitHub Actions" 手动开启一次；
+      # 移除 configure-pages 的 enablement，避免令牌创建站点时返回 Resource not accessible 报错
       - uses: actions/upload-pages-artifact@v3
         with:
           path: llm_dashboard/dashboard
