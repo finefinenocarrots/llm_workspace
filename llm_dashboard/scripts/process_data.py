@@ -49,32 +49,21 @@ print(">>> 处理 关键词报告-每日明细 sheet1 ...")
 KW_XLSX = os.path.join(RES, "关键词报告-每日明细.xlsx")
 df = pd.read_excel(KW_XLSX, sheet_name="sheet1")
 df['日期'] = df['日期'].astype(str).str[:10]
-num_cols = ['曝光量', '点击', '花费-本币', '广告销售额-本币', '广告订单', '广告销量']
+# 新版数据源：金额已是美元，无需汇率转换；列名去除"本币"后缀
+num_cols = ['曝光量', '点击', '花费', '广告销售额', '广告订单']
 for c in num_cols:
-    df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
-
-# ---- 汇率转换：本币金额 -> 美元 (仅广告数据看板生效) ----
-# 汇率sheet: 国家/本币(=1)/美元 ; 换算公式 usd = local * 美元汇率
-fx_df = pd.read_excel(KW_XLSX, sheet_name="汇率")
-FX = {str(r['国家']).strip(): float(r['美元']) for _, r in fx_df.iterrows()}
-print(f"汇率表: {FX}")
-# sheet1 所有涉及本币的金额列（比率列 ACoS/ROAS/CVR/CTR 不随汇率变化，无需转换）
-local_money_cols = ['CPC-本币', '花费-本币', '广告销售额-本币', '直接销售额-本币',
-                    '间接销售额-本币', 'CPA-本币', '广告笔单价-本币']
-_rate = df['国家'].astype(str).str.strip().map(FX)
-if _rate.isna().any():
-    miss = df.loc[_rate.isna(), '国家'].unique().tolist()
-    raise ValueError(f"以下国家在汇率表中缺失，无法换算: {miss}")
-for c in local_money_cols:
     if c in df.columns:
-        df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0) * _rate
-print("已将本币金额列换算为美元。")
+        df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
+# 广告销量 在新版数据源中不再提供，统一置0
+df['广告销量'] = 0
+
+print(f"数据行数: {len(df)}, 日期: {df['日期'].min()} ~ {df['日期'].max()}")
 
 # 维度字典编码
 dim_cols = {
     'd': '日期', 'o': '运营负责人', 's': '店铺名称', 'c': '国家',
     'g': '类目', 'p': '广告组合', 'a': '广告活动', 'k': '关键词',
-    'm': '匹配方式', 't': '类型',
+    'm': '匹配方式', 't': '类型', 'st': '有效状态',
 }
 dims = {}
 codes = {}
@@ -90,16 +79,16 @@ for i in range(len(df)):
         int(codes['d'].iat[i]), int(codes['o'].iat[i]), int(codes['s'].iat[i]),
         int(codes['c'].iat[i]), int(codes['g'].iat[i]), int(codes['p'].iat[i]),
         int(codes['a'].iat[i]), int(codes['k'].iat[i]), int(codes['m'].iat[i]),
-        int(codes['t'].iat[i]),
+        int(codes['t'].iat[i]), int(codes['st'].iat[i]),
         int(df['曝光量'].iat[i]), int(df['点击'].iat[i]),
-        r2(df['花费-本币'].iat[i]), r2(df['广告销售额-本币'].iat[i]),
+        r2(df['花费'].iat[i]), r2(df['广告销售额'].iat[i]),
         int(df['广告订单'].iat[i]), int(df['广告销量'].iat[i]),
     ])
 
 kw_data = {
     'dims': dims,
-    # 行结构: d,o,s,c,g,p,a,k,m,t, impressions, clicks, spend, sales, orders, units
-    'cols': ['d', 'o', 's', 'c', 'g', 'p', 'a', 'k', 'm', 't', 'im', 'cl', 'sp', 'sa', 'od', 'un'],
+    # 行结构: d,o,s,c,g,p,a,k,m,t,st, impressions, clicks, spend, sales, orders, units
+    'cols': ['d', 'o', 's', 'c', 'g', 'p', 'a', 'k', 'm', 't', 'st', 'im', 'cl', 'sp', 'sa', 'od', 'un'],
     'rows': rows,
 }
 dump_js(os.path.join(OUT, "kw_data.js"), "KW_DATA", kw_data)

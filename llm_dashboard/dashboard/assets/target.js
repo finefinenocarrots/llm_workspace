@@ -95,6 +95,7 @@
   const chMTacos = makeChart('ch-m-tacos');
   const chCat = makeChart('ch-cat');
   const ch14d = makeChart('ch-14d');
+  const chW4 = makeChart('ch-w4');
 
   const MONTHS = (() => {
     const s = new Set();
@@ -153,6 +154,7 @@
     renderCatRate(mList, actStart, effEnd, ds);
     renderRankTables(mList, actStart, effEnd, ds);
     render14d(effEnd, ds);
+    renderW4(effEnd, ds);
     renderAttribution(actStart, effEnd, ds, tgt, act, tgtTacos, actTacos, timeProg, spendRate);
     renderAdvice(spendRate, tacosRate, timeProg, dev, tgtTacos, actTacos, act, tgt);
   }
@@ -433,6 +435,76 @@
         { name: '广告花费', type: 'bar', data: sp, barMaxWidth: 26, itemStyle: { borderRadius: [5, 5, 0, 0], color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#4f7099' }, { offset: 1, color: '#33608c' }] } } },
         { name: 'TACOS', type: 'line', yAxisIndex: 1, data: tc, connectNulls: true, smooth: true, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#d99a3d' }, itemStyle: { color: '#d99a3d' },
           label: { show: true, fontSize: 10, color: '#d99a3d', formatter: p => p.value == null ? '' : (p.value * 100).toFixed(1) + '%' } },
+      ],
+    }), true);
+  }
+
+  /* ----- 近4周 ----- */
+  function getMonday(dateStr) {
+    const dt = D.parse(dateStr);
+    const day = dt.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    dt.setDate(dt.getDate() + diff);
+    return D.fmt(dt);
+  }
+
+  function renderW4(effEnd, ds) {
+    // 以周一为周开始，找最近4周
+    const lastMonday = getMonday(effEnd);
+    const weekStarts = [];
+    for (let i = 3; i >= 0; i--) {
+      weekStarts.push(D.addDays(lastMonday, -7 * i));
+    }
+    // 日期标签格式: "7/14-7/20"
+    const labels = weekStarts.map(ws => {
+      const we = D.addDays(ws, 6);
+      return ws.slice(5).replace('-', '/') + '-' + we.slice(5).replace('-', '/');
+    });
+    document.getElementById('w4-label').textContent = `${weekStarts[0]} ~ ${D.addDays(weekStarts[3], 6)}`;
+
+    // 按周聚合
+    const rows = filterDaily(weekStarts[0], D.addDays(weekStarts[3], 6), ds);
+    const weekMap = new Map(); // key: weekIdx (0-3), value: {sales, adsp}
+    for (let i = 0; i < 4; i++) weekMap.set(i, { sales: 0, adsp: 0 });
+
+    rows.forEach(r => {
+      const dateStr = DIM.d[r[I.d]];
+      const mon = getMonday(dateStr);
+      const wi = weekStarts.indexOf(mon);
+      if (wi >= 0) {
+        const o = weekMap.get(wi);
+        o.sales += r[I.sales];
+        o.adsp += r[I.adsp];
+      }
+    });
+
+    const sp = [], tc = [];
+    for (let i = 0; i < 4; i++) {
+      const v = weekMap.get(i);
+      sp.push(+v.adsp.toFixed(2));
+      tc.push(v.sales > 0 ? +(v.adsp / v.sales).toFixed(4) : null);
+    }
+
+    chW4.setOption(CH.base({
+      tooltip: {
+        trigger: 'axis', confine: true,
+        formatter: ps => {
+          let s = ps[0] ? ps[0].name : '';
+          ps.forEach(p => { s += `<br/>${p.marker}${p.seriesName}：<b>${p.seriesName === 'TACOS' ? F.pct(p.value) : F.money(p.value)}</b>`; });
+          return s;
+        },
+      },
+      legend: { top: 0, data: ['广告花费', 'TACOS'] },
+      grid: { left: 10, right: 44, top: 42, bottom: 10, containLabel: true },
+      xAxis: Object.assign({ type: 'category', data: labels }, CH.axis()),
+      yAxis: [
+        CH.vAxis(v => '$' + (v >= 1000 ? (v / 1000) + 'k' : v)),
+        Object.assign(CH.vAxis(v => (v * 100).toFixed(1) + '%'), { splitLine: { show: false } }),
+      ],
+      series: [
+        { name: '广告花费', type: 'bar', data: sp, barMaxWidth: 40, itemStyle: { borderRadius: [5, 5, 0, 0], color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#5f8ba3' }, { offset: 1, color: '#33608c' }] } } },
+        { name: 'TACOS', type: 'line', yAxisIndex: 1, data: tc, connectNulls: true, smooth: true, symbol: 'circle', symbolSize: 8, lineStyle: { width: 2.5, color: '#d99a3d' }, itemStyle: { color: '#d99a3d' },
+          label: { show: true, fontSize: 11, color: '#d99a3d', formatter: p => p.value == null ? '' : (p.value * 100).toFixed(1) + '%' } },
       ],
     }), true);
   }

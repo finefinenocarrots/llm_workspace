@@ -6,13 +6,13 @@
   const DIM = DATA.dims;
   const ROWS = DATA.rows;
   // 列索引
-  const I = { d: 0, o: 1, s: 2, c: 3, g: 4, p: 5, a: 6, k: 7, m: 8, t: 9, im: 10, cl: 11, sp: 12, sa: 13, od: 14, un: 15 };
+  const I = { d: 0, o: 1, s: 2, c: 3, g: 4, p: 5, a: 6, k: 7, m: 8, t: 9, st: 10, im: 11, cl: 12, sp: 13, sa: 14, od: 15, un: 16 };
 
   const dates = DIM.d; // 已排序
   const MIN_D = dates[0], MAX_D = dates[dates.length - 1];
 
   /* ---------- 筛选器 ---------- */
-  let dr, msOwner, msShop, msCountry, msCat, msPort;
+  let dr, msOwner, msShop, msCountry, msCat, msPort, msStatus;
   const refresh = debounce(renderAll, 60);
 
   dr = new DateRange(document.getElementById('f-date'), {
@@ -25,9 +25,10 @@
   msCountry = new MultiSelect(document.getElementById('f-country'), { options: DIM.c, onChange: refresh });
   msCat = new MultiSelect(document.getElementById('f-cat'), { options: DIM.g, onChange: refresh });
   msPort = new MultiSelect(document.getElementById('f-port'), { options: DIM.p, searchable: true, onChange: refresh });
+  msStatus = new MultiSelect(document.getElementById('f-status'), { options: DIM.st, onChange: refresh });
 
   document.getElementById('btn-reset').addEventListener('click', () => {
-    [msOwner, msShop, msCountry, msCat, msPort].forEach(m => { m.selected.clear(); m.sync(); });
+    [msOwner, msShop, msCountry, msCat, msPort, msStatus].forEach(m => { m.selected.clear(); m.sync(); });
     dr.setPreset('7');
   });
 
@@ -41,6 +42,7 @@
       c: setToIdx(msCountry.value(), DIM.c),
       g: setToIdx(msCat.value(), DIM.g),
       p: setToIdx(msPort.value(), DIM.p),
+      st: setToIdx(msStatus.value(), DIM.st),
     };
   }
   function setToIdx(sel, arr) {
@@ -60,6 +62,7 @@
       if (ds.c && !ds.c.has(r[I.c])) continue;
       if (ds.g && !ds.g.has(r[I.g])) continue;
       if (ds.p && !ds.p.has(r[I.p])) continue;
+      if (ds.st && !ds.st.has(r[I.st])) continue;
       out.push(r);
     }
     return out;
@@ -90,6 +93,9 @@
   const chCountryIO = makeChart('ch-country-io');
   const chAdType = makeChart('ch-adtype');
   const chMatch = makeChart('ch-match');
+  const chCatCvr = makeChart('ch-cat-cvr');
+  const chCatCpc = makeChart('ch-cat-cpc');
+  const chCatAcos = makeChart('ch-cat-acos');
 
   /* ---------- 渲染 ---------- */
   function renderAll() {
@@ -112,6 +118,7 @@
     renderOwnerTable(cur);
     renderShop(cur);
     renderCountryIO(cur);
+    renderCategoryTrends(cur, prev, dS, dE);
     renderAdType(cur);
     renderMatch(cur);
     renderKeywordTables(cur);
@@ -131,6 +138,7 @@
       { label: '广告销售额', val: F.money(t.sa), delta: ratio(t.sa, p.sa), ico: '🛒', bg: '#e3efeb', goodDown: false },
       { label: 'ACoS', val: F.pct(acos), delta: diffPct(acos, acosP), ico: '📉', bg: '#f6ecd4', goodDown: true, isPP: true },
       { label: 'CPC', val: isNaN(cpc) ? '—' : '$' + cpc.toFixed(2), delta: ratio(cpc, cpcP), ico: '🖱️', bg: '#ece8f1', goodDown: true },
+      { label: 'CVR', val: F.pct(t.cl > 0 ? t.od / t.cl : NaN), delta: diffPct(t.cl > 0 ? t.od / t.cl : NaN, p.cl > 0 ? p.od / p.cl : NaN), ico: '🎯', bg: '#e6f2f0', goodDown: false, isPP: true },
     ];
     const host = document.getElementById('kpi-row');
     host.innerHTML = items.map(it => {
@@ -330,6 +338,191 @@
         { name: 'ROAS', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.roas.toFixed(2)), symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#8a7aa8' }, itemStyle: { color: '#8a7aa8' } },
       ],
     }), true);
+  }
+
+  /* ----- 类目CVR/CPC/ACoS趋势 & 预警 ----- */
+  function groupByDateCat(rows) {
+    // 返回 Map<categoryIndex, Map<dateIndex, {im,cl,sp,sa,od}>>
+    const m = new Map();
+    for (const r of rows) {
+      const g = r[I.g], d = r[I.d];
+      let cm = m.get(g);
+      if (!cm) { cm = new Map(); m.set(g, cm); }
+      let o = cm.get(d);
+      if (!o) { o = { im: 0, cl: 0, sp: 0, sa: 0, od: 0 }; cm.set(d, o); }
+      o.im += r[I.im]; o.cl += r[I.cl]; o.sp += r[I.sp]; o.sa += r[I.sa]; o.od += r[I.od];
+    }
+    return m;
+  }
+
+  function catMetric(catMap, gIdx, dIdx) {
+    const cm = catMap.get(gIdx);
+    if (!cm) return null;
+    const o = cm.get(dIdx);
+    if (!o) return null;
+    return {
+      cvr: o.cl > 0 ? o.od / o.cl : NaN,
+      cpc: o.cl > 0 ? o.sp / o.cl : NaN,
+      acos: o.sa > 0 ? o.sp / o.sa : NaN,
+    };
+  }
+
+  function catAgg(catMap, gIdx) {
+    const cm = catMap.get(gIdx);
+    if (!cm) return { sp: 0, cl: 0, sa: 0, od: 0, im: 0 };
+    const a = { sp: 0, cl: 0, sa: 0, od: 0, im: 0 };
+    for (const o of cm.values()) {
+      a.sp += o.sp; a.cl += o.cl; a.sa += o.sa; a.od += o.od; a.im += o.im;
+    }
+    return a;
+  }
+
+  function catRiskLevel(cvr, cpc, acos, cvrP, cpcP, acosP) {
+    let score = 0;
+    const alerts = [];
+    // ACoS超标
+    if (!isNaN(acos) && acos >= 0.40) { score += 3; alerts.push('ACoS≥40%'); }
+    else if (!isNaN(acos) && acos >= 0.30) { score += 2; alerts.push('ACoS≥30%'); }
+    // ACoS环比恶化
+    if (!isNaN(acosP) && acosP > 0.1) { score += 2; alerts.push('ACoS↑恶化'); }
+    else if (!isNaN(acosP) && acosP > 0.05) { score += 1; }
+    // CPC上涨
+    if (!isNaN(cpcP) && cpcP > 0.15) { score += 2; alerts.push('CPC↑大量上涨'); }
+    else if (!isNaN(cpcP) && cpcP > 0.08) { score += 1; alerts.push('CPC↑上涨'); }
+    // CVR下滑(pp差值)
+    if (!isNaN(cvrP) && cvrP < -0.03) { score += 2; alerts.push('CVR↓大幅下滑'); }
+    else if (!isNaN(cvrP) && cvrP < -0.02) { score += 1; alerts.push('CVR↓下滑'); }
+    // CVR绝对值很低
+    if (!isNaN(cvr) && cvr < 0.03) { score += 1; alerts.push('CVR极低<3%'); }
+
+    const level = score >= 5 ? 3 : score >= 3 ? 2 : score >= 1 ? 1 : 0;
+    return { level, score, alerts };
+  }
+
+  function renderCategoryTrends(cur, prev, dS, dE) {
+    const curMap = groupByDateCat(cur);
+    const prevMap = groupByDateCat(prev);
+
+    // 获取所有类目
+    const allCats = new Set([...curMap.keys(), ...prevMap.keys()]);
+    // 过滤掉数据太少的类目 (至少当前期有3天数据)
+    const cats = Array.from(allCats).filter(g => {
+      const cm = curMap.get(g);
+      return cm && cm.size >= 3;
+    }).sort();
+
+    // 日期索引范围
+    const dIdxS = lowerBound(dates, dS), dIdxE = upperBound(dates, dE) - 1;
+    const dateLabels = [];
+    for (let di = dIdxS; di <= dIdxE; di++) dateLabels.push(dates[di].slice(5));
+
+    // 颜色板 - 固定每个类目颜色
+    const catColors = [
+      '#33608c', '#3f8f7d', '#d99a3d', '#c0453e', '#8a7aa8',
+      '#6b9e85', '#b07d5b', '#4a7a9e', '#a64d79', '#5c8a6e',
+      '#9e6b4a', '#3d5a80', '#7d4e6e', '#4a7c6b', '#ad7a3b',
+    ];
+
+    // 构建3个图表的series数据
+    const cvrSeries = [], cpcSeries = [], acosSeries = [];
+    const catRisks = [];
+
+    cats.forEach((g, gi) => {
+      const name = DIM.g[g];
+      const color = catColors[gi % catColors.length];
+
+      // 当前期每日数据
+      const cvrData = [], cpcData = [], acosData = [];
+      for (let di = dIdxS; di <= dIdxE; di++) {
+        const m = catMetric(curMap, g, di);
+        cvrData.push(m ? (isNaN(m.cvr) ? null : +(m.cvr * 100).toFixed(1)) : null);
+        cpcData.push(m ? (isNaN(m.cpc) ? null : +m.cpc.toFixed(2)) : null);
+        acosData.push(m ? (isNaN(m.acos) ? null : +(m.acos * 100).toFixed(1)) : null);
+      }
+
+      cvrSeries.push({ name, type: 'line', data: cvrData, color, smooth: true, symbol: 'circle', symbolSize: 4, lineStyle: { width: 2 } });
+      cpcSeries.push({ name, type: 'line', data: cpcData, color, smooth: true, symbol: 'circle', symbolSize: 4, lineStyle: { width: 2 } });
+      acosSeries.push({ name, type: 'line', data: acosData, color, smooth: true, symbol: 'circle', symbolSize: 4, lineStyle: { width: 2 } });
+
+      // 聚合统计 & 环比
+      const a = catAgg(curMap, g);
+      const pa = catAgg(prevMap, g);
+      const cvr = a.cl > 0 ? a.od / a.cl : NaN;
+      const cpc = a.cl > 0 ? a.sp / a.cl : NaN;
+      const acos = a.sa > 0 ? a.sp / a.sa : NaN;
+      const pcvr = pa.cl > 0 ? pa.od / pa.cl : NaN;
+      const pcpc = pa.cl > 0 ? pa.sp / pa.cl : NaN;
+      const pacos = pa.sa > 0 ? pa.sp / pa.sa : NaN;
+
+      const cvrP = !isNaN(cvr) && !isNaN(pcvr) ? cvr - pcvr : NaN;   // pp差值，非比例
+      const cpcP = !isNaN(cpc) && !isNaN(pcpc) && pcpc > 0 ? (cpc - pcpc) / pcpc : NaN;
+      const acosP = !isNaN(acos) && !isNaN(pacos) && pacos > 0 ? (acos - pacos) / pacos : NaN;
+
+      const risk = catRiskLevel(cvr, cpc, acos, cvrP, cpcP, acosP);
+      catRisks.push({ name, cvr, cpc, acos, cvrP, cpcP, acosP, sp: a.sp, sa: a.sa, risk });
+    });
+
+    // 渲染CVR图表
+    chCatCvr.setOption(CH.base({
+      legend: { bottom: 0, textStyle: { fontSize: 10 } },
+      grid: { left: 50, right: 30, top: 10, bottom: 30, containLabel: true },
+      xAxis: Object.assign({ type: 'category', data: dateLabels }, CH.axis(30)),
+      yAxis: CH.vAxis(v => v + '%', '转化率'),
+      series: cvrSeries,
+    }), true);
+
+    // 渲染CPC图表
+    chCatCpc.setOption(CH.base({
+      legend: { bottom: 0, textStyle: { fontSize: 10 } },
+      grid: { left: 50, right: 30, top: 10, bottom: 30, containLabel: true },
+      xAxis: Object.assign({ type: 'category', data: dateLabels }, CH.axis(30)),
+      yAxis: CH.vAxis(v => '$' + v.toFixed(2), 'CPC'),
+      series: cpcSeries,
+    }), true);
+
+    // 渲染ACoS图表
+    chCatAcos.setOption(CH.base({
+      legend: { bottom: 0, textStyle: { fontSize: 10 } },
+      grid: { left: 50, right: 30, top: 10, bottom: 30, containLabel: true },
+      xAxis: Object.assign({ type: 'category', data: dateLabels }, CH.axis(30)),
+      yAxis: CH.vAxis(v => v + '%', 'ACoS'),
+      series: acosSeries,
+    }), true);
+
+    // 渲染预警条
+    const dangerAlerts = catRisks.filter(c => c.risk.level >= 2);
+    const warnAlerts = catRisks.filter(c => c.risk.level === 1);
+    let alertHTML = '';
+    dangerAlerts.forEach(c => {
+      alertHTML += `<span class="alert-tag danger"><span class="a-dot rd"></span><b>${esc(c.name)}</b> ${c.risk.alerts.join('，')}</span>`;
+    });
+    warnAlerts.forEach(c => {
+      alertHTML += `<span class="alert-tag warning"><span class="a-dot yl"></span><b>${esc(c.name)}</b> ${c.risk.alerts.join('，')}</span>`;
+    });
+    if (!alertHTML) alertHTML = '<span class="alert-tag" style="background:#edf4f0;color:#2c6e50;border:1px solid #c8ddd2">✅ 所有类目指标均在正常范围</span>';
+    document.getElementById('alert-bar').innerHTML = alertHTML;
+
+    // 渲染风险评级表
+    const sorted = [...catRisks].sort((a, b) => b.risk.score - a.risk.score);
+    const riskLabels = { 0: '—', 1: '低', 2: '中', 3: '高' };
+    const riskTags = { 3: 'r3', 2: 'r2', 1: 'r1', 0: '' };
+
+    const thead = '<thead><tr><th>类目</th><th>广告花费</th><th>CVR</th><th>CVR环比</th><th>CPC</th><th>CPC环比</th><th>ACoS</th><th>ACoS环比</th><th>风险评级</th><th>风险提示</th></tr></thead>';
+    const tbody = '<tbody>' + sorted.map(c => `
+      <tr>
+        <td><b>${esc(c.name)}</b></td>
+        <td>${F.money(c.sp)}</td>
+        <td>${F.pct(c.cvr, 1)}</td>
+        <td class="${!isNaN(c.cvrP) && c.cvrP < 0 ? 'td-neg' : ''}">${!isNaN(c.cvrP) ? (c.cvrP >= 0 ? '+' : '') + (c.cvrP * 100).toFixed(1) + 'pp' : '—'}</td>
+        <td>${F.money(c.cpc, 2)}</td>
+        <td class="${!isNaN(c.cpcP) && c.cpcP > 0 ? 'td-pos' : ''}">${F.signPct(c.cpcP, 1)}</td>
+        <td class="${!isNaN(c.acos) && c.acos >= 0.30 ? 'td-acos-hi' : !isNaN(c.acos) && c.acos >= 0.20 ? 'td-acos-md' : ''}">${F.pct(c.acos, 1)}</td>
+        <td class="${!isNaN(c.acosP) && c.acosP > 0 ? 'td-pos' : ''}">${F.signPct(c.acosP, 1)}</td>
+        <td>${c.risk.level > 0 ? '<span class="tag-sm ' + riskTags[c.risk.level] + '">' + riskLabels[c.risk.level] + '风险 (' + c.risk.score + '分)</span>' : '<span style="color:#a3a8ae">正常</span>'}</td>
+        <td style="font-size:12px">${c.risk.alerts.length > 0 ? c.risk.alerts.join('；') : '—'}</td>
+      </tr>
+    `).join('') + '</tbody>';
+    document.getElementById('tbl-cat-risk').innerHTML = thead + tbody;
   }
 
   /* ----- 广告类型 ----- */

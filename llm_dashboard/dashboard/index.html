@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>广告数据看板 · 跨境电商广告分析</title>
-<link rel="stylesheet" href="assets/common.css?v=20260726d1">
+<link rel="stylesheet" href="assets/common.css?v=20260729">
 </head>
 <body>
 <header class="topbar">
@@ -27,6 +27,7 @@
     <div class="f-item"><label>国家</label><div id="f-country"></div></div>
     <div class="f-item"><label>类目</label><div id="f-cat"></div></div>
     <div class="f-item"><label>广告组合</label><div id="f-port"></div></div>
+    <div class="f-item"><label>有效状态</label><div id="f-status"></div></div>
     <div class="f-actions"><button class="btn-reset" id="btn-reset">重置筛选</button></div>
   </div>
 
@@ -72,8 +73,36 @@
     </div>
   </div>
 
-  <!-- 板块3 广告类型 -->
-  <div class="sec-title"><span class="bar"></span>板块三 · 广告类型对比</div>
+  <!-- 板块3 类目CVR/CPC/ACoS趋势 -->
+  <div class="sec-title"><span class="bar"></span>板块三 · 类目 CVR / CPC / ACoS 趋势与预警</div>
+  <div class="card">
+    <div class="alert-bar" id="alert-bar"></div>
+    <div class="grid g-2" style="margin-top:12px">
+      <div class="card" style="box-shadow:none;border:1px solid var(--line);background:var(--bg)">
+        <h3>各类目 CVR 趋势 <span class="hint">转化率 = 广告订单 / 点击</span></h3>
+        <div id="ch-cat-cvr" class="chart"></div>
+      </div>
+      <div class="card" style="box-shadow:none;border:1px solid var(--line);background:var(--bg)">
+        <h3>各类目 CPC 趋势</h3>
+        <div id="ch-cat-cpc" class="chart"></div>
+      </div>
+    </div>
+    <div class="grid g-2" style="margin-top:12px">
+      <div class="card" style="box-shadow:none;border:1px solid var(--line);background:var(--bg)">
+        <h3>各类目 ACoS 趋势 <span class="hint">基准线 30%</span></h3>
+        <div id="ch-cat-acos" class="chart"></div>
+      </div>
+      <div class="card" style="box-shadow:none;border:1px solid var(--line);background:var(--bg)">
+        <h3>类目环比变化 & 风险评级</h3>
+        <div class="tbl-wrap" style="max-height:360px;overflow-y:auto">
+          <table class="tbl" id="tbl-cat-risk"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 板块4 广告类型 -->
+  <div class="sec-title"><span class="bar"></span>板块四 · 广告类型对比</div>
   <div class="grid g-2">
     <div class="card">
       <h3>不同广告类型表现 <span class="hint">当前数据源仅含 SP 类型</span></h3>
@@ -85,8 +114,8 @@
     </div>
   </div>
 
-  <!-- 板块4 匹配方式 -->
-  <div class="sec-title"><span class="bar"></span>板块四 · 匹配方式分析</div>
+  <!-- 板块5 匹配方式 -->
+  <div class="sec-title"><span class="bar"></span>板块五 · 匹配方式分析</div>
   <div class="grid g-2">
     <div class="card">
       <h3>各匹配方式：花费 / 曝光 / 点击 / ACoS</h3>
@@ -98,8 +127,8 @@
     </div>
   </div>
 
-  <!-- 板块5 关键词优化 -->
-  <div class="sec-title"><span class="bar"></span>板块五 · 关键词优化</div>
+  <!-- 板块6 关键词优化 -->
+  <div class="sec-title"><span class="bar"></span>板块六 · 关键词优化</div>
   <div class="card">
     <h3>💸 浪费花费 Top20 <span class="hint">有花费、无销售额，且累计点击 ≥15 次（点击不足 15 次暂不纳入）</span></h3>
     <div class="tbl-wrap" style="max-height:430px;overflow-y:auto"><table class="tbl" id="tbl-waste"></table></div>
@@ -113,16 +142,16 @@
     <div class="tbl-wrap" style="max-height:430px;overflow-y:auto"><table class="tbl" id="tbl-good"></table></div>
   </div>
 
-  <!-- 板块6 建议 -->
-  <div class="sec-title"><span class="bar"></span>板块六 · 优化建议与行动措施</div>
+  <!-- 板块7 建议 -->
+  <div class="sec-title"><span class="bar"></span>板块七 · 优化建议与行动措施</div>
   <div class="card">
     <div class="advice" id="advice-list"></div>
   </div>
 </div>
 
 <script src="assets/echarts.min.js"></script>
-<script src="data/kw_data.js?v=20260726d1"></script>
-<script src="assets/common.js?v=20260726d1"></script>
-<script src="assets/ads.js?v=20260726d1"></script>
+<script src="data/kw_data.js?v=20260731"></script>
+<script src="assets/common.js?v=20260731"></script>
+<script src="assets/ads.js?v=20260731"></script>
 </body>
 </html>
