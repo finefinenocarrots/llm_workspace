@@ -1,0 +1,5 @@
+# Office 临时锁文件（WPS / Excel 打开时生成，勿提交）
+~$*
+*.tmp
+Thumbs.db
+.DS_Store
