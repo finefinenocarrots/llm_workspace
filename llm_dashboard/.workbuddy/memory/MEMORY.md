@@ -38,3 +38,16 @@ dashboard/
 3. 模块三：近14天日度变动 + 近4周周度变动 (2026-07-29新增)
 4. 模块四：目标差距归因
 5. 模块五：改进建议
+
+## GitHub Pages 部署与远程核查（重要）
+- 仓库 `finefinenocarrots/llm_workspace` 已开启 Pages（Settings→Pages→Source="GitHub Actions"）。8/3 部署成功已验证站点可用。
+- 部署链路：`git push origin main` → 命中 `llm_dashboard/dashboard/**` → 触发 `.github/workflows/deploy-pages.yml` → upload-pages-artifact → deploy-pages。
+- ⚠️ deploy-pages@v4 不稳定：可能 >10 分钟仍 in_progress，也可能约 10 分钟后转 **failure**（部署服务侧瞬时故障，非配置问题）。若 upload 成功而 deploy 失败，直接去 Actions 页面 Re-run all jobs 即可，无需改代码。
+- 远程核查方法（无需 gh/登录，公开仓库匿名可读 GitHub API）：
+  - 工作流运行：`/actions/runs?per_page=5` 看最新 run 的 status/conclusion
+  - 部署状态：`/deployments?per_page=3` 取最新 deployment id → `/deployments/<id>/statuses` 看最新 state（success/failure/in_progress）
+  - job 明细：`/actions/runs/<run_id>/jobs` 看哪一步失败
+  - job 原始日志：`/actions/jobs/<job_id>/logs` 需 admin 权限，匿名返回 403
+- ⚠️ WebFetch 对同一 URL 有 ~15 分钟缓存！重复查同一 URL 会返回旧结果，误判"一直 in_progress"。务必加 `?fresh=2` / `?t=时间戳` 等查询参数绕过（GitHub API 忽略未知参数）。
+- 区分"推送成功"与"部署成功"：远端 `origin/main` SHA == 本地最新 commit（用 `git rev-list --left-right --count origin/main...HEAD` 看 0/0）即推送成功；部署成功看 deployment state==success 且线上板块一日期范围已更新。
+- 核查顺序：先用 API 确认 deployment 最终 state（success/failure），再据结论行动；不要只凭"in_progress"下乐观结论。

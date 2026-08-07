@@ -671,7 +671,7 @@
       el.insertAdjacentHTML('afterbegin', '<tbody><tr><td class="empty-tip">当前筛选条件下暂无符合条件的关键词</td></tr></tbody>');
       return;
     }
-    el.innerHTML = `<thead><tr><th style="min-width:150px">关键词</th><th>匹配</th><th>国家</th><th style="min-width:170px">广告活动</th>
+    el.innerHTML = `<thead><tr><th style="min-width:150px">关键词</th><th>匹配</th><th>国家</th><th style="min-width:200px">广告活动 <span class="copy-hint">（点名复制）</span></th>
       <th>花费</th><th>销售额</th><th>ACoS</th><th>点击</th><th>曝光</th><th class="wrap" style="min-width:260px;text-align:left">优化建议与措施</th></tr></thead><tbody>` +
       arr.map(x => {
         const acos = x.sa > 0 ? x.sp / x.sa : NaN;
@@ -679,7 +679,7 @@
           <td class="dim" style="text-align:left">${esc(DIM.k[x.k])}</td>
           <td>${DIM.m[x.mm]}</td>
           <td>${DIM.c[x.c]}</td>
-          <td style="text-align:left;max-width:230px;overflow:hidden;text-overflow:ellipsis" title="${esc(DIM.a[x.a])}">${esc(DIM.a[x.a])}</td>
+          <td class="kw-act" data-act="${esc(DIM.a[x.a])}" title="点击复制活动名">${esc(DIM.a[x.a])}</td>
           <td>${F.money(x.sp)}</td>
           <td>${x.sa > 0 ? F.money(x.sa) : '<span class="tag tag-red">$0</span>'}</td>
           <td>${isNaN(acos) ? '—' : acosTag(acos)}</td>
@@ -690,6 +690,36 @@
       }).join('') + '</tbody>';
   }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  /* ----- 板块六：点击广告活动名即复制全文 ----- */
+  function copyText(txt, onDone) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(txt).then(onDone).catch(() => fallbackCopy(txt, onDone));
+    } else {
+      fallbackCopy(txt, onDone);
+    }
+  }
+  function fallbackCopy(txt, onDone) {
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position = 'fixed'; ta.style.top = '-99px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); onDone(); } catch (e) { /* 忽略 */ }
+    document.body.removeChild(ta);
+  }
+  document.addEventListener('click', e => {
+    const td = e.target.closest('td.kw-act');
+    if (!td || td.classList.contains('copied')) return;
+    const txt = td.getAttribute('data-act');
+    if (!txt) return;
+    copyText(txt, () => {
+      td.classList.add('copied');
+      const flag = document.createElement('span');
+      flag.className = 'copy-flag';
+      flag.textContent = '已复制';
+      td.appendChild(flag);
+      setTimeout(() => { td.classList.remove('copied'); if (flag.parentNode) flag.parentNode.removeChild(flag); }, 1300);
+    });
+  });
 
   /* ----- 板块6 汇总建议 ----- */
   function renderAdvice(cur) {
