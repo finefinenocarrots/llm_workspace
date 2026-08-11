@@ -92,9 +92,37 @@
   </div>
 
   <!-- 否词库 -->
-  <div class="sec-title"><span class="bar"></span>否词库 <span class="hint">ACoS > 50% 的投放词</span></div>
+  <div class="sec-title"><span class="bar"></span>否词库 <span class="hint">ACoS > 50% · 花费 > $20 · 点击 > 20次</span></div>
   <div class="card">
     <div id="neg-list"></div>
+  </div>
+
+  <!-- 效果评级规则说明 -->
+  <div class="sec-title"><span class="bar"></span>效果表现 判定规则</div>
+  <div class="card">
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <div style="flex:1;min-width:180px;padding:12px;background:#ecfdf5;border-radius:6px;border:1px solid #a7f3d0">
+        <span class="tag-sm r-star">极高效词</span>
+        <div style="margin-top:6px;font-size:12px;color:#475569">订单 &gt; 2 且 ACoS &lt; 20%</div>
+      </div>
+      <div style="flex:1;min-width:180px;padding:12px;background:#eff6ff;border-radius:6px;border:1px solid #bfdbfe">
+        <span class="tag-sm r-good">高效词</span>
+        <div style="margin-top:6px;font-size:12px;color:#475569">订单 &gt; 2 且 ACoS &lt; 30%</div>
+      </div>
+      <div style="flex:1;min-width:180px;padding:12px;background:#f5f3ff;border-radius:6px;border:1px solid #ddd6fe">
+        <span class="tag-sm r-ok">中等词</span>
+        <div style="margin-top:6px;font-size:12px;color:#475569">订单 &gt; 2 且 ACoS &lt; 40%</div>
+      </div>
+      <div style="flex:1;min-width:180px;padding:12px;background:#fffbeb;border-radius:6px;border:1px solid #fde68a">
+        <span class="tag-sm r-potential">潜力词</span>
+        <div style="margin-top:6px;font-size:12px;color:#475569">订单 &lt; 2 且 ACoS &lt; 30%</div>
+      </div>
+      <div style="flex:1;min-width:180px;padding:12px;background:#fef2f2;border-radius:6px;border:1px solid #fecaca">
+        <span class="tag-sm r-waste">低效词</span>
+        <div style="margin-top:6px;font-size:12px;color:#475569">ACoS &gt; 40%（不论订单数）</div>
+      </div>
+    </div>
+    <div class="footnote" style="margin-top:10px">★ 以上规则自上而下优先级判定 · 词频 = 该词被多少个不同广告活动投放 · 单个关键词如在多个活动/匹配方式中出现会合并统计</div>
   </div>
 </div>
 
