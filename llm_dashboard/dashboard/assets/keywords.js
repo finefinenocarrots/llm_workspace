@@ -264,7 +264,7 @@
 
     const tbody = '<tbody>' + list.map(k => `
       <tr data-kw="${esc(k.kw)}">
-        <td class="dim">${esc(k.kw)}</td>
+        <td class="dim" title="${esc(Array.from(k.camps).join('\n'))}">${esc(k.kw)}</td>
         <td><span class="cls-tag">${esc(k.cls)}</span></td>
         <td class="text-right">${k.camps.size}</td>
         <td class="text-right">${F.num(k.im, 0)}</td>
@@ -324,7 +324,7 @@
     };
     document.querySelector('#tbl-kw tbody').innerHTML = list.map(k => `
       <tr data-kw="${esc(k.kw)}">
-        <td class="dim">${esc(k.kw)}</td>
+        <td class="dim" title="${esc(Array.from(k.camps).join('\n'))}">${esc(k.kw)}</td>
         <td><span class="cls-tag">${esc(k.cls)}</span></td>
         <td class="text-right">${k.camps.size}</td>
         <td class="text-right">${F.num(k.im, 0)}</td>
@@ -353,18 +353,25 @@
       return;
     }
 
-    const thead = '<thead><tr><th>关键词</th><th>分类</th><th>花费</th><th>点击</th><th>ACoS</th><th>订单</th><th>CVR</th></tr></thead>';
-    const tbody = '<tbody>' + candidates.map(k => `
-      <tr>
-        <td class="dim">${esc(k.kw)}</td>
+    const thead = '<thead><tr><th>关键词</th><th>分类</th><th>花费</th><th>点击</th><th>ACoS</th><th>订单</th><th>CVR</th><th>广告活动</th></tr></thead>';
+    const tbody = '<tbody>' + candidates.map(k => {
+      const campList = Array.from(k.camps);
+      const allCamps = esc(campList.join('\n'));
+      const campHtml = campList.length > 2
+        ? `<span onclick="navigator.clipboard.writeText('${allCamps.replace(/'/g,"\\'")}');var t=this;t.style.color='#3b82f6';setTimeout(function(){t.style.color='#475569'},600)" style="cursor:pointer;color:#475569" title="点击复制全部 ${campList.length} 个活动名">${F.num(campList.length,0)}个</span>`
+        : campList.map(c => `<span onclick="navigator.clipboard.writeText('${esc(c).replace(/'/g,"\\'")}');var t=this;t.style.color='#3b82f6';setTimeout(function(){t.style.color='#475569'},600)" style="cursor:pointer;font-size:11px;color:#475569" title="点击复制">${esc(c.length > 30 ? c.slice(0,30)+'...' : c)}</span>`).join('<br>');
+      return `
+      <tr data-kw="${esc(k.kw)}">
+        <td class="dim" title="${esc(Array.from(k.camps).join('\n'))}">${esc(k.kw)}</td>
         <td><span class="cls-tag">${esc(k.cls)}</span></td>
         <td class="text-right">${F.money(k.sp)}</td>
         <td class="text-right">${F.num(k.cl, 0)}</td>
         <td class="text-right" style="color:#dc2626;font-weight:600">${(k.acos*100).toFixed(1)}%</td>
         <td class="text-right">${F.num(k.od, 0)}</td>
         <td class="text-right">${F.pct(k.cvr, 1)}</td>
-      </tr>
-    `).join('') + '</tbody>';
+        <td style="font-size:11px;color:#475569">${campHtml}</td>
+      </tr>`;
+    }).join('') + '</tbody>';
 
     document.getElementById('neg-list').innerHTML =
       `<div class="tbl-wrap" style="max-height:500px"><table class="tbl">${thead}${tbody}</table></div>
@@ -420,6 +427,10 @@
 
     panel.innerHTML = `<h3 style="margin:0 0 12px 0;font-size:15px">📋 「${esc(kw.kw)}」各匹配方式表现 <span class="hint">词频: ${kw.camps.size}个活动 · 分类: ${esc(kw.cls)}</span></h3>
       <div class="tbl-wrap" style="max-height:300px"><table class="tbl">${thead}${tbody}</table></div>
+      <div style="margin-top:10px;padding:10px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
+        <span style="font-size:12px;color:#64748b;font-weight:600">📌 所在广告活动（${kw.camps.size}个·点击复制）：</span>
+        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${Array.from(kw.camps).map(c => `<span onclick="navigator.clipboard.writeText('${esc(c).replace(/'/g,"\\'")}');var t=this;t.style.background='#dbeafe';t.style.borderColor='#3b82f6';setTimeout(function(){t.style.background='#fff';t.style.borderColor='#e2e8f0'},600)" style="cursor:pointer;font-size:11px;padding:3px 8px;background:#fff;border:1px solid #e2e8f0;border-radius:3px;color:#475569;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:all .15s" title="点击复制完整名称">${esc(c.length > 45 ? c.slice(0,45)+'...' : c)}</span>`).join('')}</div>
+      </div>
       <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
         <span class="tag-sm r-star" style="cursor:pointer" onclick="document.querySelectorAll('#tbl-kw tbody tr').forEach(r=>r.classList.remove('selected'));document.getElementById('kw-detail-panel').innerHTML='<div class=empty-tip>点击上方表格中的关键词查看详情</div>';selectedKw=null;">✕ 关闭详情</span>
       </div>`;
@@ -439,7 +450,7 @@
 
   /* ---------- 启动 ---------- */
   document.addEventListener('click', function(e) {
-    const row = e.target.closest('#tbl-kw tbody tr[data-kw]');
+    const row = e.target.closest('tr[data-kw]');
     if (!row) return;
     const kwName = row.dataset.kw;
     const found = _kwCache.find(k => k.kw === kwName);
@@ -451,9 +462,9 @@
       document.getElementById('kw-detail-panel').style.display = 'none';
       return;
     }
-    delete found.mtDetail;  // 清除缓存，重新计算匹配方式
+    delete found.mtDetail;
     selectedKw = found;
-    document.querySelectorAll('#tbl-kw tbody tr').forEach(r => r.classList.remove('selected'));
+    document.querySelectorAll('tr[data-kw]').forEach(r => r.classList.remove('selected'));
     row.classList.add('selected');
     document.getElementById('kw-detail-panel').style.display = 'block';
     renderKwDetail(_kwCache);
