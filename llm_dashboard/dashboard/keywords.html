@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>关键词库 & 否词库 · 跨境电商广告分析</title>
+<link rel="stylesheet" href="assets/common.css?v=20260811">
+<style>
+  .kpi-good .k-value { color: #10b981; }
+  .kpi-ok .k-value { color: #3b82f6; }
+  .kpi-warn .k-value { color: #f59e0b; }
+  .kpi-bad .k-value { color: #ef4444; }
+  .kpi-neg .k-value { color: #1e293b; }
+  .k-sub { font-size: 11px; color: #a3a8ae; margin-top: 2px; }
+  .cls-tag { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 3px; background: #e9eef4; color: #33608c; font-weight: 500; }
+  .tag-sm { display: inline-block; padding: 3px 10px; font-size: 11px; border-radius: 3px; font-weight: 600; white-space: nowrap; }
+  .tag-sm.r-star { background: #ecfdf5; color: #059669; }
+  .tag-sm.r-good { background: #eff6ff; color: #2563eb; }
+  .tag-sm.r-ok { background: #f5f3ff; color: #7c3aed; }
+  .tag-sm.r-potential { background: #fffbeb; color: #d97706; }
+  .tag-sm.r-waste { background: #fef2f2; color: #dc2626; }
+  .tag-sm.r-normal { background: #f8fafc; color: #64748b; }
+  .tag-sm.r-watch { background: #f1f5f9; color: #94a3b8; }
+  .tag-sm.r-neg { background: #1e293b; color: #f8fafc; }
+  .neg-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #fef2f2; border-radius: 6px; margin-bottom: 6px; border: 1px solid #fecaca; flex-wrap: wrap; }
+  .neg-kw { font-weight: 600; min-width: 160px; font-size: 13px; }
+  .neg-info { color: #7a8089; font-size: 12px; flex: 1; }
+  .btn-add-neg { padding: 4px 14px; border: 1px solid #dc2626; background: #fff; color: #dc2626; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .btn-add-neg:hover { background: #dc2626; color: #fff; }
+  .neg-added-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #1e293b; color: #fff; border-radius: 4px; margin: 3px; font-size: 12px; }
+  .btn-rm-neg { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; }
+  .btn-rm-neg:hover { color: #ef4444; }
+  .tbl-info { font-size: 12px; color: #a3a8ae; margin-bottom: 8px; }
+  .text-right { text-align: right; }
+  .dim { font-weight: 500; }
+  #tbl-kw tbody tr { cursor: pointer; transition: background .15s; }
+  #tbl-kw tbody tr:hover { background: #eff6ff; }
+  #tbl-kw tbody tr.selected { background: #dbeafe; outline: 2px solid #3b82f6; outline-offset: -2px; }
+  .mt-row td { font-size: 12px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="logo"><span class="dot"></span>跨境电商广告分析中心</div>
+  <nav>
+    <a href="index.html">广告数据看板</a>
+    <a href="target.html">目标达成看板</a>
+    <a class="active" href="keywords.html">关键词库 & 否词库</a>
+  </nav>
+</header>
+
+<div class="page">
+  <!-- 筛选栏 -->
+  <div class="filterbar" id="filterbar">
+    <div class="f-item" style="min-width:340px">
+      <label>日期范围</label>
+      <div id="f-date" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"></div>
+    </div>
+    <div class="f-item"><label>运营负责人</label><div id="f-owner"></div></div>
+    <div class="f-item"><label>店铺</label><div id="f-shop"></div></div>
+    <div class="f-item"><label>国家</label><div id="f-country"></div></div>
+    <div class="f-item"><label>类目</label><div id="f-cat"></div></div>
+    <div class="f-item"><label>广告组合</label><div id="f-port"></div></div>
+    <div class="f-actions"><button class="btn-reset" id="btn-reset">重置筛选</button></div>
+  </div>
+
+  <!-- KPI卡片 -->
+  <div class="sec-title"><span class="bar"></span>关键词库总览 <span class="sub" id="range-label"></span></div>
+  <div class="grid g-kpi" id="kpi-row"></div>
+
+  <!-- 图表 -->
+  <div class="grid g-2" style="margin-top:16px">
+    <div class="card"><h3>效果表现分布</h3><div id="ch-effect-pie" class="chart"></div></div>
+    <div class="card"><h3>关键词分类分布</h3><div id="ch-class-bar" class="chart"></div></div>
+  </div>
+
+  <!-- 关键词主表格 + 联动详情 -->
+  <div class="sec-title" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <span style="display:flex;align-items:center;gap:8px"><span class="bar"></span>投放词 / ASIN 数据明细</span>
+    <div class="f-item" style="min-width:auto"><label>效果表现</label><div id="f-effect-inline"></div></div>
+    <div class="f-item" style="min-width:auto"><label>关键词分类</label><div id="f-class-inline"></div></div>
+  </div>
+  <div class="card">
+    <div class="tbl-info" id="tbl-info"></div>
+    <div class="tbl-wrap" style="max-height:400px;overflow-y:auto">
+      <table class="tbl" id="tbl-kw"></table>
+    </div>
+    <div class="footnote">点击表头可排序 · 点击关键词行查看该词各匹配方式详情 · 效果表现规则：订单>2 → ACoS<20%极高效 / <30%高效 / <40%中等 · ACoS>40%低效 · 订单<2且ACoS<30%潜力 · 词频=不同广告活动数</div>
+  </div>
+  <div class="card" id="kw-detail-panel" style="margin-top:12px;display:none">
+    <div class="empty-tip">点击上方表格中的关键词查看该词在不同匹配方式下的表现</div>
+  </div>
+
+  <!-- 否词库 -->
+  <div class="sec-title"><span class="bar"></span>否词库 <span class="hint">ACoS > 50% 的投放词</span></div>
+  <div class="card">
+    <div id="neg-list"></div>
+  </div>
+</div>
+
+<script src="assets/echarts.min.js"></script>
+<script src="data/kw_data.js?v=20260811"></script>
+<script src="data/kw_classify.js?v=20260811"></script>
+<script src="assets/common.js?v=20260811"></script>
+<script src="assets/keywords.js?v=20260811"></script>
+</body>
+</html>
