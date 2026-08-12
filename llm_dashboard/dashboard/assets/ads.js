@@ -676,7 +676,7 @@
       arr.map(x => {
         const acos = x.sa > 0 ? x.sp / x.sa : NaN;
         return `<tr>
-          <td class="dim" style="text-align:left">${esc(DIM.k[x.k])}</td>
+          <td class="dim kw-name" data-kw="${esc(DIM.k[x.k])}" title="点击复制关键词" style="text-align:left">${esc(DIM.k[x.k])}</td>
           <td>${DIM.m[x.mm]}</td>
           <td>${DIM.c[x.c]}</td>
           <td class="kw-act" data-act="${esc(DIM.a[x.a])}" title="点击复制活动名">${esc(DIM.a[x.a])}</td>
@@ -707,9 +707,9 @@
     document.body.removeChild(ta);
   }
   document.addEventListener('click', e => {
-    const td = e.target.closest('td.kw-act');
+    const td = e.target.closest('td.kw-act') || e.target.closest('td.kw-name');
     if (!td || td.classList.contains('copied')) return;
-    const txt = td.getAttribute('data-act');
+    const txt = td.getAttribute('data-act') || td.getAttribute('data-kw');
     if (!txt) return;
     copyText(txt, () => {
       td.classList.add('copied');

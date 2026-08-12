@@ -193,6 +193,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 
   color: #fff; background: var(--green); padding: 1px 6px; border-radius: 3px; vertical-align: middle;
 }
 .copy-hint { font-weight: 400; color: var(--text-2); font-size: 11px; }
+.tbl td.kw-name { cursor: pointer; transition: background .15s, color .15s; }
+.tbl td.kw-name:hover { background: #eef4fb; color: var(--primary); }
+.tbl td.kw-name.copied { background: #e2efe6; color: var(--green); }
+.tbl td.kw-name .copy-flag { display: inline-block; margin-left: 6px; font-size: 10.5px; font-weight: 600; color: #fff; background: var(--green); padding: 1px 6px; border-radius: 3px; vertical-align: middle; }
 .tag { display:inline-block; padding: 2px 9px; border-radius: 4px; font-size: 11.5px; font-weight:600; }
 .tag-red { background:#f4e3e1; color:#a63d34; }
 .tag-green { background:#e2efe6; color:#2e7d5c; }

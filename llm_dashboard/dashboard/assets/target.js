@@ -327,19 +327,26 @@
         trigger: 'axis', confine: true,
         formatter: ps => {
           const d = top[ps[0].dataIndex];
-          return `${d.name}<br/>费比完成率：<b>${F.pct(d.rate)}</b><br/>目标 TACOS：${F.pct(d.tt)}<br/>实际 TACOS：${F.pct(d.at)}<br/>期内广告花费：${F.money(d.sp)}`;
+          return `${d.name}<br/>费比完成率：<b>${F.pct(d.rate)}</b><br/>实际费比 TACOS：<b>${F.pct(d.at)}</b><br/>目标 TACOS：${F.pct(d.tt)}<br/>期内广告花费：${F.money(d.sp)}`;
         },
       },
-      legend: { show: false },
-      grid: { left: 10, right: 20, top: 20, bottom: 10, containLabel: true },
+      legend: { top: 0, data: ['费比完成率', '实际费比 TACOS'] },
+      grid: { left: 10, right: 20, top: 42, bottom: 10, containLabel: true },
       xAxis: Object.assign({ type: 'category', data: top.map(x => x.name) }, CH.axis(30)),
       yAxis: CH.vAxis(v => (v * 100).toFixed(0) + '%'),
-      series: [{
-        type: 'bar', barMaxWidth: 34,
-        data: top.map(x => ({ value: +x.rate.toFixed(4), itemStyle: { color: x.rate >= 1 ? '#3a8f6c' : '#c0453e', borderRadius: [6, 6, 0, 0] } })),
-        label: { show: true, position: 'top', fontSize: 10, color: '#7a8089', formatter: p => (p.value * 100).toFixed(0) + '%' },
-        markLine: { symbol: 'none', silent: true, lineStyle: { color: '#d99a3d', type: 'dashed' }, label: { formatter: '达标线 100%', color: '#d99a3d', fontSize: 11 }, data: [{ yAxis: 1 }] },
-      }],
+      series: [
+        {
+          name: '费比完成率', type: 'bar', barMaxWidth: 16, barGap: '30%',
+          data: top.map(x => ({ value: +x.rate.toFixed(4), itemStyle: { color: x.rate >= 1 ? '#3a8f6c' : '#c0453e', borderRadius: [5, 5, 0, 0] } })),
+          label: { show: true, position: 'top', fontSize: 9, color: '#7a8089', formatter: p => (p.value * 100).toFixed(0) + '%' },
+          markLine: { symbol: 'none', silent: true, lineStyle: { color: '#d99a3d', type: 'dashed' }, label: { formatter: '达标线 100%', color: '#d99a3d', fontSize: 10 }, data: [{ yAxis: 1 }] },
+        },
+        {
+          name: '实际费比 TACOS', type: 'bar', barMaxWidth: 16,
+          data: top.map(x => ({ value: +x.at.toFixed(4), itemStyle: { color: '#33608c', borderRadius: [5, 5, 0, 0] } })),
+          label: { show: true, position: 'top', fontSize: 9, color: '#7a8089', formatter: p => (p.value * 100).toFixed(1) + '%' },
+        },
+      ],
     }), true);
   }
 
