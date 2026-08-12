@@ -13,6 +13,7 @@ BASE = r"D:\workspace\llm_dashboard"
 HTMLS = [
     os.path.join(BASE, "dashboard", "index.html"),
     os.path.join(BASE, "dashboard", "target.html"),
+    os.path.join(BASE, "dashboard", "keywords.html"),
 ]
 STATE = os.path.join(BASE, "scripts", ".cachever")
 

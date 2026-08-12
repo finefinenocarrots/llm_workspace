@@ -15,10 +15,10 @@ JS 数据文件。本技能描述「源表追加/修改行 → 重新生成数�
 数据流：
 ```
 resource/关键词报告-每日明细.xlsx  ─┐
-                                   ├─► scripts/process_data.py ─► dashboard/data/kw_data.js  (广告数据看板)
-resource/广告目标达成进度.xlsx     ─┘                              dashboard/data/tg_data.js  (目标达成看板)
+                                   ├─► scripts/process_data.py ─► dashboard/data/kw_data.js   (广告数据看板 + 关键词库)
+resource/广告目标达成进度.xlsx     ─┘                              dashboard/data/tg_data.js   (目标达成看板)
 ```
-前端 `dashboard/index.html`、`dashboard/target.html` 通过 `<script src="data/*.js?v=...">` 加载，
+前端 `dashboard/index.html`、`dashboard/target.html`、`dashboard/keywords.html` 通过 `<script src="data/*.js?v=...">` 加载，
 `?v=版本号` 用于强刷缓存——**数据变更后必须升版本号，否则浏览器仍读旧缓存。**
 
 ## 何时使用
@@ -31,11 +31,10 @@ resource/广告目标达成进度.xlsx     ─┘                              d
 ## 标准流程（务必按序执行）
 
 ### 1. 确认源表已更新且结构正确
-检查两个 Excel 的 sheet 名与列名是否仍与 `references/schema.md` 一致。重点确认：
-- `关键词报告-每日明细.xlsx` 仍存在 `sheet1` 与 `汇率` 两个 sheet。
-- `汇率` sheet 覆盖所有出现过的「国家」（含新增国家），否则脚本会 `ValueError` 中断。
+检查两个 Excel 的 sheet 名与列名是否与预期一致。重点确认：
+- `关键词报告-每日明细.xlsx` 仍存在 `sheet1`，且金额列（`花费`、`广告销售额`）为美元、不含"本币"后缀。
 - `广告目标达成进度.xlsx` 存在 `产品表现数据源`、`每月销售目标`、`list-info` 三个 sheet。
-- 不要改列名；只应「追加行」，不要改变既有列顺序。
+- 不要改必需列名；列顺序可变（脚本按列名读取），仅「追加行」最安全。
 
 ### 2. 运行数据处理脚本重新生成数据
 使用隔离 Python 环境（含 pandas / openpyxl）：
@@ -54,7 +53,7 @@ C:/Users/fang_hu/.workbuddy/binaries/python/envs/default/Scripts/python.exe scri
 - 终端无 `ValueError`/异常；若报「以下国家在汇率表中缺失」→ 回到第 1 步补 `汇率` sheet 后重跑。
 
 ### 4. 升缓存版本号（必须）
-运行版本号脚本，它会把 `index.html`、`target.html` 中所有 `?v=...` 引用统一替换为
+运行版本号脚本，它会把 `index.html`、`target.html`、`keywords.html` 中所有 `?v=...` 引用统一替换为
 `YYYYMMDDdN` 格式的新版本，强制浏览器重新拉取数据：
 
 ```bash
@@ -62,24 +61,22 @@ cd D:/workspace/llm_dashboard
 C:/Users/fang_hu/.workbuddy/binaries/python/envs/default/Scripts/python.exe scripts/bump_data_version.py
 ```
 
-脚本输出形如 `index.html: 替换 3 处引用 -> ?v=20260726d1`，确认两个 HTML 都有替换记录。
+脚本输出形如 `index.html: 替换 3 处引用 -> ?v=20260812d1`，确认三个 HTML 都有替换记录。
 
 > 注意：切勿手动改版本号字符串而跳过本脚本，否则可能遗漏某个资源引用导致部分文件仍走缓存。
 
-### 5. （推荐）无头浏览器回归验证
-确保本地静态服务在 `dashboard/` 目录运行（如未运行：
-`cd D:/workspace/llm_dashboard/dashboard && python -m http.server 8770`），然后：
+### 5. （推荐）本地启动验证
+启动本地静态服务确认三张看板加载正常：
 
 ```bash
-CHS=$(find /c/Users/fang_hu -iname "chrome-headless-shell.exe" | head -1)
-cd D:/workspace/llm_dashboard
-BASE_URL=http://localhost:8770 CHROME_PATH="$CHS" \
-NODE_PATH=C:/Users/fang_hu/.workbuddy/binaries/node/workspace/node_modules \
-C:/Users/fang_hu/.workbuddy/binaries/node/versions/22.22.2/node.exe scripts/verify_pages.js
+cd D:/workspace/llm_dashboard/dashboard
+python -m http.server 8770
 ```
 
-期望：`console errors: NONE`，且 kpi cards / canvas 数量正常（index 应有 4 KPI + 6 canvas；
-target 应有 8 KPI + 6 canvas）。
+浏览器打开：
+- `http://localhost:8770/index.html`（广告数据看板）
+- `http://localhost:8770/target.html`（目标达成看板）
+- `http://localhost:8770/keywords.html`（关键词库 & 否词库）
 
 ### 6. 向用户汇报
 简洁告知：数据已基于哪个日期范围重新生成、新版本号是多少、验证是否通过、本地访问地址
@@ -111,26 +108,15 @@ git push origin main
 
 ## 常见坑位
 
-- **新增国家必填汇率**：`汇率` sheet 的「国家」列必须包含 `sheet1` 中出现的所有国家中文名，
-  否则 Part1 会 `raise ValueError`。汇率换算公式 `usd = local × 美元`，US=1.0。
-- **目标数据日期下限**：`process_data.py` 对「产品表现数据源」做了 `日期 >= '2026-03-01'` 过滤，
-  早于该日的行会被静默丢弃。若需纳入更早数据，改脚本里的该过滤条件。
-- **比率列不随汇率变**：ACoS/ROAS/CVR/CTR 为比率，不做汇率换算；只有金额类本币列换算成美元。
-- **维度自动扩展**：新增的负责人/店铺/类目/国家/广告组合值会自动编入 `dims` 字典，无需改前端代码。
-- **删除列是安全的（仅限可选金额列）**：`process_data.py` 对 sheet1 的「金额类本币列」做了
-  `if c in df.columns` 容错——删除其中任意一列（如 `间接销售额-本币`）会自动跳过、不报错。
-  仅 `花费-本币`、`广告销售额-本币` 进入前端输出，其余金额列非必需。但**必需列不可删**
-  （`日期`/`曝光量`/`点击`/`花费-本币`/`广告销售额-本币`/`广告订单`/`广告销量` 及各维度列），
-  删除会 KeyError 中断。删列后照常跑流程即可，无需改脚本（除非要从容错列表里移除该列名，见下条）。
-- **同步脚本与文档**：删除某列后，建议把该列名从 `process_data.py` 的 `local_money_cols` 列表、
-  以及 `references/schema.md` 的列清单中移除，保持三者一致；缺失的列名留着也不会报错（有容错），
-  但移除更干净、避免误导。
+- **金额已是美元**：v20260729 起数据源金额已是美元，`process_data.py` 不再做汇率转换。若未来变回本币，需恢复 `汇率` sheet 和换算代码。
+- **关键词库看板**：`dashboard/keywords.html` 是第三张看板，也需要刷新 `?v=` 缓存。
+- **kw_classify.js**：关键词分类配置文件，`keywords.html` 加载，数据更新时不需修改。
 - **缓存是唯一「看不见的坑」**：数据已变但页面不变，99% 是缓存——务必执行第 4 步并让用户强刷。
 
 ## 相关文件
 
-- `scripts/process_data.py` —— 数据处理主脚本（读 Excel → 写 JS 数据文件）。详见 `references/schema.md`。
-- `scripts/bump_data_version.py` —— 缓存版本号递增脚本（步骤 4）。
-- `scripts/verify_pages.js` —— 无头浏览器验证（步骤 5）。
+- `scripts/process_data.py` —— 数据处理主脚本（读 Excel → 写 JS 数据文件）。
+- `scripts/bump_data_version.py` —— 缓存版本号递增脚本（覆盖3个HTML，步骤 4）。
 - `dashboard/data/kw_data.js` / `tg_data.js` —— 生成产物（前端直接依赖）。
-- `dashboard/index.html` / `dashboard/target.html` —— 前端页面（含 `?v=` 引用）。
+- `dashboard/data/kw_classify.js` —— 关键词分类配置（keywords.html 加载，手工维护）。
+- `dashboard/index.html` / `dashboard/target.html` / `dashboard/keywords.html` —— 三张看板页面（含 `?v=` 引用）。
