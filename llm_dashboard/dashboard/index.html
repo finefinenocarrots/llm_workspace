@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>广告数据看板 · 跨境电商广告分析</title>
-<link rel="stylesheet" href="assets/common.css?v=20260814d1">
+<link rel="stylesheet" href="assets/common.css?v=20260817d1">
 </head>
 <body>
 <header class="topbar">
@@ -129,7 +129,14 @@
   </div>
 
   <!-- 板块6 关键词优化 -->
-  <div class="sec-title"><span class="bar"></span>板块六 · 关键词优化</div>
+  <div class="sec-title"><span class="bar"></span>板块六 · 关键词优化 <span class="sub">关键词按广告活动分组排列</span></div>
+  <div class="card" style="padding:10px 16px;margin-bottom:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+    <div class="f-item" style="min-width:220px">
+      <label>广告活动</label>
+      <div id="f-campaign"></div>
+    </div>
+    <span style="font-size:12px;color:var(--text-2)">同一广告活动的关键词相邻展示，方便集中查看与对比</span>
+  </div>
   <div class="card">
     <h3>💸 浪费花费 Top20 <span class="hint">有花费、无销售额，且累计点击 ≥15 次（点击不足 15 次暂不纳入）</span></h3>
     <div class="tbl-wrap" style="max-height:430px;overflow-y:auto"><table class="tbl" id="tbl-waste"></table></div>
@@ -151,8 +158,8 @@
 </div>
 
 <script src="assets/echarts.min.js"></script>
-<script src="data/kw_data.js?v=20260814d1"></script>
-<script src="assets/common.js?v=20260814d1"></script>
-<script src="assets/ads.js?v=20260814d1"></script>
+<script src="data/kw_data.js?v=20260817d1"></script>
+<script src="assets/common.js?v=20260817d1"></script>
+<script src="assets/ads.js?v=20260817d1"></script>
 </body>
 </html>

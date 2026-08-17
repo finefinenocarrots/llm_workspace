@@ -12,7 +12,8 @@
   const MIN_D = dates[0], MAX_D = dates[dates.length - 1];
 
   /* ---------- 筛选器 ---------- */
-  let dr, msOwner, msShop, msCountry, msCat, msPort, msStatus;
+  let dr, msOwner, msShop, msCountry, msCat, msPort, msStatus, msCampaign;
+  let _curRows = null;
   const refresh = debounce(renderAll, 60);
 
   dr = new DateRange(document.getElementById('f-date'), {
@@ -26,9 +27,10 @@
   msCat = new MultiSelect(document.getElementById('f-cat'), { options: DIM.g, onChange: refresh });
   msPort = new MultiSelect(document.getElementById('f-port'), { options: DIM.p, searchable: true, onChange: refresh });
   msStatus = new MultiSelect(document.getElementById('f-status'), { options: DIM.st, onChange: refresh });
+  msCampaign = new MultiSelect(document.getElementById('f-campaign'), { options: DIM.a, searchable: true, onChange: debounce(() => { if (_curRows) renderKeywordTables(_curRows); }, 60) });
 
   document.getElementById('btn-reset').addEventListener('click', () => {
-    [msOwner, msShop, msCountry, msCat, msPort, msStatus].forEach(m => { m.selected.clear(); m.sync(); });
+    [msOwner, msShop, msCountry, msCat, msPort, msStatus, msCampaign].forEach(m => { m.selected.clear(); m.sync(); });
     dr.setPreset('7');
   });
 
@@ -102,6 +104,7 @@
     const [dS, dE] = dr.value();
     const ds = dimSets();
     const cur = filterRows(dS, dE, ds);
+    _curRows = cur;
 
     // 同周期环比区间
     const span = D.diffDays(dS, dE) + 1;
@@ -625,10 +628,21 @@
   }
 
   function renderKeywordTables(cur) {
-    const all = kwAgg(cur);
+    let all = kwAgg(cur);
+
+    // 板块六局部筛选：广告活动
+    const campSel = msCampaign.value();
+    if (campSel !== null) {
+      all = all.filter(x => campSel.has(DIM.a[x.a]));
+    }
+
+    // 按广告活动名分组排序（先按指标取 Top20，再按活动名分组展示）
+    const byCamp = (a, b) => DIM.a[a.a].localeCompare(DIM.a[b.a], 'zh-CN');
 
     // 浪费花费: 有花费无销售额，且累计点击 ≥15 次（点击不足 15 次的样本量太小，暂不判定为浪费）
-    const waste = all.filter(x => x.sp > 0 && x.sa <= 0 && x.cl >= 15).sort((a, b) => b.sp - a.sp).slice(0, 20);
+    const waste = all.filter(x => x.sp > 0 && x.sa <= 0 && x.cl >= 15)
+      .sort((a, b) => b.sp - a.sp).slice(0, 20)
+      .sort((a, b) => byCamp(a, b) || b.sp - a.sp);
     fillKwTable('tbl-waste', waste, x => {
       const tips = [];
       if (x.cl >= 30) tips.push(`累计点击 ${x.cl} 次零转化，建议<b>直接暂停投放</b>并复盘关键词与产品相关性`);
@@ -639,7 +653,9 @@
     }, true);
 
     // 高 ACoS
-    const high = all.filter(x => x.sa > 0 && x.sp / x.sa >= 0.3).sort((a, b) => b.sp - a.sp).slice(0, 20);
+    const high = all.filter(x => x.sa > 0 && x.sp / x.sa >= 0.3)
+      .sort((a, b) => b.sp - a.sp).slice(0, 20)
+      .sort((a, b) => byCamp(a, b) || b.sp - a.sp);
     fillKwTable('tbl-highacos', high, x => {
       const acos = x.sp / x.sa;
       const cpc = x.cl > 0 ? x.sp / x.cl : 0;
@@ -653,7 +669,9 @@
     }, true);
 
     // 优质词
-    const good = all.filter(x => x.sa >= 100 && x.sp / x.sa <= 0.2).sort((a, b) => b.sa - a.sa).slice(0, 20);
+    const good = all.filter(x => x.sa >= 100 && x.sp / x.sa <= 0.2)
+      .sort((a, b) => b.sa - a.sa).slice(0, 20)
+      .sort((a, b) => byCamp(a, b) || b.sa - a.sa);
     fillKwTable('tbl-good', good, x => {
       const acos = x.sp / x.sa;
       const tips = [`ACoS 仅 ${F.pct(acos)}，建议<b>提高竞价 10%~20%</b> 抢占更高位次`];
@@ -673,9 +691,10 @@
     }
     el.innerHTML = `<thead><tr><th style="min-width:150px">关键词</th><th>匹配</th><th>国家</th><th style="min-width:200px">广告活动 <span class="copy-hint">（点名复制）</span></th>
       <th>花费</th><th>销售额</th><th>ACoS</th><th>点击</th><th>曝光</th><th class="wrap" style="min-width:260px;text-align:left">优化建议与措施</th></tr></thead><tbody>` +
-      arr.map(x => {
+      arr.map((x, i) => {
         const acos = x.sa > 0 ? x.sp / x.sa : NaN;
-        return `<tr>
+        const grpStart = i > 0 && DIM.a[arr[i - 1].a] !== DIM.a[x.a];
+        return `<tr class="${grpStart ? 'kw-grp' : ''}">
           <td class="dim kw-name" data-kw="${esc(DIM.k[x.k])}" title="点击复制关键词" style="text-align:left">${esc(DIM.k[x.k])}</td>
           <td>${DIM.m[x.mm]}</td>
           <td>${DIM.c[x.c]}</td>

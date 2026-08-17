@@ -51,3 +51,15 @@ dashboard/
 - ⚠️ WebFetch 对同一 URL 有 ~15 分钟缓存！重复查同一 URL 会返回旧结果，误判"一直 in_progress"。务必加 `?fresh=2` / `?t=时间戳` 等查询参数绕过（GitHub API 忽略未知参数）。
 - 区分"推送成功"与"部署成功"：远端 `origin/main` SHA == 本地最新 commit（用 `git rev-list --left-right --count origin/main...HEAD` 看 0/0）即推送成功；部署成功看 deployment state==success 且线上板块一日期范围已更新。
 - 核查顺序：先用 API 确认 deployment 最终 state（success/failure），再据结论行动；不要只凭"in_progress"下乐观结论。
+
+## ⚠️ 本环境推送 GitHub 必须用 SSH（2026-08-14 实测）
+- **现象**：本沙箱环境 `github.com:443` 的 HTTPS git 连接被防火墙拦截（`Failed to connect to github.com:443` / `Recv failure: Connection was reset`，连试 7 次均失败）；但 `api.github.com`、`codeload.github.com` 可达，`ssh -T git@github.com` 能成功认证。
+- **解决**：推送前临时切 SSH：`git remote set-url origin git@github.com:finefinenocarrots/llm_workspace.git`，`git push origin main` 成功，完事再 `git remote set-url origin https://github.com/finefinenocarrots/llm_workspace.git` 还原 HTTPS（尊重用户原配置）。
+- **澄清：本仓库未真正启用 Git LFS**——无 `.gitattributes`，`git cat-file` 显示 kw_data.js 是完整 3.3MB blob（非 pointer）。之前 `git config filter.lfs.smudge` 有值只是全局 git-lfs 安装残留，未作用于任何文件。故数据文件随 SSH push 直接传全量，无 LFS 上传隐患（无需折腾 `git lfs push`）。
+
+## 线上站点 URL（Pages 部署在仓库根，非 llm_dashboard/dashboard 子路径）
+- 站点根：`https://finefinenocarrots.github.io/llm_workspace/`
+- 广告看板：`https://finefinenocarrots.github.io/llm_workspace/index.html`
+- 目标看板：`https://finefinenocarrots.github.io/llm_workspace/target.html`
+- 关键词库：`https://finefinenocarrots.github.io/llm_workspace/keywords.html`
+- 数据文件：`https://finefinenocarrots.github.io/llm_workspace/data/kw_data.js`（注意是根下 `data/`，不是 `llm_dashboard/dashboard/data/`）
