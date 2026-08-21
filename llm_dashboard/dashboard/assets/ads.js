@@ -573,7 +573,7 @@
   function renderMatch(cur) {
     const m = groupBy(cur, I.m);
     const arr = Array.from(m.entries())
-      .map(([k, v]) => ({ name: DIM.m[k], ...v, acos: v.sa > 0 ? v.sp / v.sa : 0 }))
+      .map(([k, v]) => ({ name: DIM.m[k], ...v, acos: v.sa > 0 ? v.sp / v.sa : 0, cvr: v.cl > 0 ? v.od / v.cl : 0 }))
       .sort((a, b) => b.sp - a.sp);
     chMatch.setOption(CH.base({
       tooltip: {
@@ -582,7 +582,7 @@
           let s = ps[0] ? ps[0].name : '';
           ps.forEach(p => {
             let v;
-            if (p.seriesName === 'ACoS') v = F.pct(p.value);
+            if (p.seriesName === 'ACoS' || p.seriesName === 'CVR') v = F.pct(p.value);
             else if (p.seriesName === '花费') v = F.money(p.value);
             else v = F.num(p.value);
             s += `<br/>${p.marker}${p.seriesName}：<b>${v}</b>`;
@@ -602,14 +602,15 @@
         { name: '曝光', type: 'bar', data: arr.map(x => Math.max(x.im, 1)), barMaxWidth: 30, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#5f8ba3' } },
         { name: '点击', type: 'bar', data: arr.map(x => Math.max(x.cl, 1)), barMaxWidth: 30, itemStyle: { borderRadius: [5, 5, 0, 0], color: '#3f8f7d' } },
         { name: 'ACoS', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.acos.toFixed(4)), symbol: 'circle', symbolSize: 7, lineStyle: { color: '#d99a3d', width: 2.5 }, itemStyle: { color: '#d99a3d' } },
+        { name: 'CVR', type: 'line', yAxisIndex: 1, data: arr.map(x => +x.cvr.toFixed(4)), symbol: 'diamond', symbolSize: 8, lineStyle: { color: '#8a7aa8', width: 2.5, type: 'dashed' }, itemStyle: { color: '#8a7aa8' } },
       ],
     }), true);
 
     const el = document.getElementById('tbl-match');
-    el.innerHTML = `<thead><tr><th>匹配方式</th><th>花费</th><th>曝光</th><th>点击</th><th>CTR</th><th>CPC</th><th>ACoS</th></tr></thead><tbody>` +
+    el.innerHTML = `<thead><tr><th>匹配方式</th><th>花费</th><th>曝光</th><th>点击</th><th>CTR</th><th>CPC</th><th>ACoS</th><th>CVR</th></tr></thead><tbody>` +
       arr.map(x => `<tr><td class="dim">${x.name}</td><td>${F.money(x.sp)}</td><td>${F.num(x.im)}</td><td>${F.num(x.cl)}</td>
         <td>${F.pct(x.im > 0 ? x.cl / x.im : 0, 2)}</td><td>${x.cl > 0 ? '$' + (x.sp / x.cl).toFixed(2) : '—'}</td>
-        <td>${acosTag(x.sa > 0 ? x.sp / x.sa : NaN)}</td></tr>`).join('') + '</tbody>';
+        <td>${acosTag(x.sa > 0 ? x.sp / x.sa : NaN)}</td><td>${F.pct(x.cvr, 1)}</td></tr>`).join('') + '</tbody>';
   }
 
   /* ----- 关键词聚合 ----- */
