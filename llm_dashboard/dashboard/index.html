@@ -28,7 +28,6 @@
     <div class="f-item"><label>国家</label><div id="f-country"></div></div>
     <div class="f-item"><label>类目</label><div id="f-cat"></div></div>
     <div class="f-item"><label>广告组合</label><div id="f-port"></div></div>
-    <div class="f-item"><label>有效状态</label><div id="f-status"></div></div>
     <div class="f-actions"><button class="btn-reset" id="btn-reset">重置筛选</button></div>
   </div>
 
@@ -130,12 +129,16 @@
 
   <!-- 板块6 关键词优化 -->
   <div class="sec-title"><span class="bar"></span>板块六 · 关键词优化 <span class="sub">关键词按广告活动分组排列</span></div>
-  <div class="card" style="padding:10px 16px;margin-bottom:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+  <div class="card" style="padding:10px 16px;margin-bottom:14px;display:flex;gap:16px 24px;align-items:center;flex-wrap:wrap">
     <div class="f-item" style="min-width:220px">
-      <label>广告活动</label>
+      <label>广告活动 <span class="copy-hint">（仅板块六）</span></label>
       <div id="f-campaign"></div>
     </div>
-    <span style="font-size:12px;color:var(--text-2)">同一广告活动的关键词相邻展示，方便集中查看与对比</span>
+    <div class="f-item" style="min-width:160px">
+      <label>有效状态 <span class="copy-hint">（全局）</span></label>
+      <div id="f-status"></div>
+    </div>
+    <span style="font-size:12px;color:var(--text-2)">同一广告活动的关键词相邻展示，方便集中查看与对比；有效状态为全局筛选，影响全部板块</span>
   </div>
   <div class="card">
     <h3>💸 浪费花费 Top20 <span class="hint">有花费、无销售额，且累计点击 ≥15 次（点击不足 15 次暂不纳入）</span></h3>
@@ -150,8 +153,25 @@
     <div class="tbl-wrap" style="max-height:430px;overflow-y:auto"><table class="tbl" id="tbl-good"></table></div>
   </div>
 
-  <!-- 板块7 建议 -->
-  <div class="sec-title"><span class="bar"></span>板块七 · 优化建议与行动措施</div>
+  <!-- 板块7 各类目星期表现对比 -->
+  <div class="sec-title"><span class="bar"></span>板块七 · 各类目星期表现对比</div>
+  <div class="card" style="margin-bottom:14px">
+    <h3>💡 预算分配建议 <span class="hint">基于各星期整体投放效率（CVR↑ / ACoS↓ 为优）</span></h3>
+    <div class="advice" id="wk-budget-advice"></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <h3>各类目 · 星期表现对比 <span class="hint">颜色越绿=该指标越优，越红=越差</span></h3>
+      <div class="seg" id="wk-metric-seg"></div>
+    </div>
+    <div class="tbl-wrap" style="overflow-x:auto;margin-top:6px">
+      <table class="tbl" id="tbl-weekday"></table>
+    </div>
+    <div class="footnote">注：每行=一个类目，每列=星期几；单元格为该指标在对应星期几的聚合值。花费/广告订单为绝对值，CTR/CPC/CVR/ACoS 为聚合后计算。"周均"为该指标在 7 个星期上的均值（花费/订单为周均额）。颜色按当前指标在表内相对优劣着色（绿=优、红=差）。</div>
+  </div>
+
+  <!-- 板块8 建议 -->
+  <div class="sec-title"><span class="bar"></span>板块八 · 优化建议与行动措施</div>
   <div class="card">
     <div class="advice" id="advice-list"></div>
   </div>

@@ -10,10 +10,22 @@
 
   const dates = DIM.d; // 已排序
   const MIN_D = dates[0], MAX_D = dates[dates.length - 1];
+  const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  const dateWk = dates.map(d => D.parse(d).getDay()); // 0=周日 .. 6=周六
+  const WK_METRICS = [
+    { key: 'sp',   label: '花费',   dir: 0,  fmt: v => F.money(v) },
+    { key: 'od',   label: '广告订单', dir: 1,  fmt: v => F.num(v) },
+    { key: 'ctr',  label: 'CTR',    dir: 1,  fmt: v => F.pct(v, 2) },
+    { key: 'cpc',  label: 'CPC',    dir: -1, fmt: v => '$' + v.toFixed(2) },
+    { key: 'cvr',  label: 'CVR',    dir: 1,  fmt: v => F.pct(v, 1) },
+    { key: 'acos', label: 'ACoS',   dir: -1, fmt: v => F.pct(v, 1) },
+  ];
+  let wkMetric = 'cvr';
 
   /* ---------- 筛选器 ---------- */
   let dr, msOwner, msShop, msCountry, msCat, msPort, msStatus, msCampaign;
   let _curRows = null;
+  let _wkAgg = null;
   const refresh = debounce(renderAll, 60);
 
   dr = new DateRange(document.getElementById('f-date'), {
@@ -28,10 +40,15 @@
   msPort = new MultiSelect(document.getElementById('f-port'), { options: DIM.p, searchable: true, onChange: refresh });
   msStatus = new MultiSelect(document.getElementById('f-status'), { options: DIM.st, onChange: refresh });
   msCampaign = new MultiSelect(document.getElementById('f-campaign'), { options: DIM.a, searchable: true, onChange: debounce(() => { if (_curRows) renderKeywordTables(_curRows); }, 60) });
+  buildWkSeg();
 
   document.getElementById('btn-reset').addEventListener('click', () => {
     [msOwner, msShop, msCountry, msCat, msPort, msStatus, msCampaign].forEach(m => { m.selected.clear(); m.sync(); });
     dr.setPreset('7');
+    wkMetric = 'cvr';
+    const seg = document.getElementById('wk-metric-seg');
+    if (seg) seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.k === 'cvr'));
+    if (_curRows) renderWeekdayTable();
   });
 
   function debounce(fn, t) { let h; return function () { clearTimeout(h); h = setTimeout(fn, t); }; }
@@ -125,6 +142,7 @@
     renderAdType(cur);
     renderMatch(cur);
     renderKeywordTables(cur);
+    renderWeekday(cur);
     renderAdvice(cur);
   }
 
@@ -611,6 +629,149 @@
       arr.map(x => `<tr><td class="dim">${x.name}</td><td>${F.money(x.sp)}</td><td>${F.num(x.im)}</td><td>${F.num(x.cl)}</td>
         <td>${F.pct(x.im > 0 ? x.cl / x.im : 0, 2)}</td><td>${x.cl > 0 ? '$' + (x.sp / x.cl).toFixed(2) : '—'}</td>
         <td>${acosTag(x.sa > 0 ? x.sp / x.sa : NaN)}</td><td>${F.pct(x.cvr, 1)}</td></tr>`).join('') + '</tbody>';
+  }
+
+  /* ----- 板块七：各类目星期表现对比 ----- */
+  function buildWkSeg() {
+    const host = document.getElementById('wk-metric-seg');
+    if (!host) return;
+    WK_METRICS.forEach(mk => {
+      const b = document.createElement('button');
+      b.textContent = mk.label; b.dataset.k = mk.key;
+      if (mk.key === wkMetric) b.classList.add('on');
+      b.addEventListener('click', () => {
+        wkMetric = mk.key;
+        host.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.k === mk.key));
+        renderWeekdayTable();
+      });
+      host.appendChild(b);
+    });
+  }
+
+  function renderWeekday(cur) {
+    const m = new Map();
+    for (const r of cur) {
+      const g = r[I.g], w = dateWk[r[I.d]];
+      let arr = m.get(g);
+      if (!arr) { arr = Array.from({ length: 7 }, () => ({ im: 0, cl: 0, sp: 0, sa: 0, od: 0 })); m.set(g, arr); }
+      const o = arr[w];
+      o.im += r[I.im]; o.cl += r[I.cl]; o.sp += r[I.sp]; o.sa += r[I.sa]; o.od += r[I.od];
+    }
+    _wkAgg = m;
+    renderWkBudget(m);
+    renderWeekdayTable();
+  }
+
+  function renderWkBudget(m) {
+    const ov = Array.from({ length: 7 }, () => ({ im: 0, cl: 0, sp: 0, sa: 0, od: 0 }));
+    m.forEach(arr => arr.forEach((o, w) => { const t = ov[w]; t.im += o.im; t.cl += o.cl; t.sp += o.sp; t.sa += o.sa; t.od += o.od; }));
+    const totalSp = ov.reduce((s, o) => s + o.sp, 0);
+    const info = ov.map((o, w) => ({
+      w, name: WEEK[w], sp: o.sp, cl: o.cl,
+      cvr: o.cl > 0 ? o.od / o.cl : NaN,
+      acos: o.sa > 0 ? o.sp / o.sa : NaN,
+      share: totalSp > 0 ? o.sp / totalSp : 0,
+    })).filter(d => isFinite(d.cvr) && isFinite(d.acos) && d.cl > 0);
+    const host = document.getElementById('wk-budget-advice');
+    if (info.length < 2) {
+      host.innerHTML = '<div class="advice-item"><div class="a-ico" style="background:#e9eef4">ℹ️</div><div><div class="a-tit">样本不足</div><div class="a-txt">当前筛选范围内有效星期数据不足，无法给出可靠的预算分配建议。</div></div></div>';
+      return;
+    }
+    const cvrs = info.map(d => d.cvr), acoss = info.map(d => d.acos);
+    const cMin = Math.min(...cvrs), cMax = Math.max(...cvrs), aMin = Math.min(...acoss), aMax = Math.max(...acoss);
+    info.forEach(d => {
+      const nCvr = cMax > cMin ? (d.cvr - cMin) / (cMax - cMin) : 0.5;
+      const nAcos = aMax > aMin ? (aMax - d.acos) / (aMax - aMin) : 0.5;
+      d.score = (nCvr + nAcos) / 2;
+    });
+    const sorted = [...info].sort((a, b) => b.score - a.score);
+    const best = sorted.slice(0, 2), worst = sorted.slice(-2).reverse();
+    const bestDays = best.map(d => d.name).join('、');
+    const worstDays = worst.map(d => d.name).join('、');
+    const bestShare = best.reduce((s, d) => s + d.share, 0);
+    const worstShare = worst.reduce((s, d) => s + d.share, 0);
+
+    const items = [];
+    items.push({
+      ico: '📊', bg: '#e9eef4', tit: '星期效率排名',
+      txt: `当前范围内，<b>${bestDays}</b> 转化效率最高（CVR ${F.pct(best[0].cvr, 1)} / ACoS ${F.pct(best[0].acos, 1)}），<b>${worstDays}</b> 效率最低（CVR ${F.pct(worst[0].cvr, 1)} / ACoS ${F.pct(worst[0].acos, 1)}）。建议把预算与竞价向高效星期倾斜。`,
+    });
+    if (worstShare > bestShare && worstShare > 0.15) {
+      items.push({
+        ico: '💡', bg: '#f6ecd4', tit: '预算再平衡',
+        txt: `低效星期（${worstDays}）当前合计占预算 <b>${F.pct(worstShare)}</b>，高于高效星期（${bestDays}）的 ${F.pct(bestShare)}。建议将低效天约 <b>${F.pct(Math.min(0.3, worstShare * 0.4))}</b> 的预算转移到高效天，预计在不增加总预算的前提下改善整体 ACoS。`,
+      });
+    }
+    // 周末 vs 工作日
+    const wknd = info.filter(d => d.w === 0 || d.w === 6);
+    const wday = info.filter(d => d.w >= 1 && d.w <= 5);
+    if (wknd.length && wday.length) {
+      const avgCvr = arr => arr.reduce((s, d) => s + d.cvr, 0) / arr.length;
+      const avgAcos = arr => arr.reduce((s, d) => s + d.acos, 0) / arr.length;
+      const better = avgCvr(wknd) > avgCvr(wday) ? '周末' : '工作日';
+      items.push({
+        ico: '🗓️', bg: '#e2efe6', tit: '周末 vs 工作日',
+        txt: `<b>${better}</b>整体转化更优（周末 CVR ${F.pct(avgCvr(wknd), 1)} / ACoS ${F.pct(avgAcos(wknd), 1)}；工作日 CVR ${F.pct(avgCvr(wday), 1)} / ACoS ${F.pct(avgAcos(wday), 1)}）。可在广告活动层级用分时调价（dayparting）为高效时段加码，低效时段保底曝光即可。`,
+      });
+    }
+    host.innerHTML = items.map(it => `<div class="advice-item"><div class="a-ico" style="background:${it.bg}">${it.ico}</div><div><div class="a-tit">${it.tit}</div><div class="a-txt">${it.txt}</div></div></div>`).join('');
+  }
+
+  function renderWeekdayTable() {
+    const m = _wkAgg;
+    if (!m) return;
+    const mk = WK_METRICS.find(x => x.key === wkMetric);
+    const cats = Array.from(m.entries())
+      .filter(([, arr]) => arr.some(o => o.cl > 0 || o.sp > 0))
+      .sort((a, b) => b[1].reduce((s, o) => s + o.sp, 0) - a[1].reduce((s, o) => s + o.sp, 0));
+    const el = document.getElementById('tbl-weekday');
+    if (!cats.length) {
+      el.innerHTML = '<tbody><tr><td class="empty-tip">当前筛选条件下暂无类目数据</td></tr></tbody>';
+      return;
+    }
+    const rows = cats.map(([g, arr]) => {
+      const cells = arr.map(o => {
+        switch (wkMetric) {
+          case 'sp': return o.sp;
+          case 'od': return o.od;
+          case 'ctr': return o.im > 0 ? o.cl / o.im : NaN;
+          case 'cpc': return o.cl > 0 ? o.sp / o.cl : NaN;
+          case 'cvr': return o.cl > 0 ? o.od / o.cl : NaN;
+          case 'acos': return o.sa > 0 ? o.sp / o.sa : NaN;
+        }
+        return NaN;
+      });
+      return { g, cells };
+    });
+    const vals = [];
+    rows.forEach(r => r.cells.forEach(v => { if (isFinite(v)) vals.push(v); }));
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    if (!isFinite(lo) || !isFinite(hi) || lo === hi) { lo = 0; hi = 1; }
+    const norm = v => (v - lo) / (hi - lo);
+    function cellColor(v) {
+      if (!isFinite(v)) return '';
+      if (mk.dir === 0) { // 花费/订单：中性蓝，越高越深
+        const a = 0.08 + 0.30 * norm(v);
+        return `background:rgba(51,96,140,${a.toFixed(2)})`;
+      }
+      let t = norm(v); // 1=最大值
+      if (mk.dir === -1) t = 1 - t; // 越低越好 → 反转
+      // t: 1=最优(绿 58,143,108) 0=最差(红 192,69,62)
+      const r = Math.round(192 + (58 - 192) * t);
+      const g = Math.round(69 + (143 - 69) * t);
+      const b = Math.round(62 + (108 - 62) * t);
+      const al = 0.10 + 0.34 * Math.abs(t - 0.5) * 2;
+      return `background:rgba(${r},${g},${b},${al.toFixed(2)})`;
+    }
+    const thead = '<thead><tr><th>类目</th>' + WEEK.map(w => `<th>${w}</th>`).join('') + '<th>周均</th></tr></thead>';
+    const tbody = '<tbody>' + rows.map(r => {
+      const valid = r.cells.filter(v => isFinite(v));
+      const avg = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : NaN;
+      return '<tr><td class="dim">' + esc(DIM.g[r.g]) + '</td>' +
+        r.cells.map(v => `<td style="${cellColor(v)}">${isFinite(v) ? mk.fmt(v) : '—'}</td>`).join('') +
+        `<td style="font-weight:600">${isFinite(avg) ? mk.fmt(avg) : '—'}</td></tr>`;
+    }).join('') + '</tbody>';
+    el.innerHTML = thead + tbody;
   }
 
   /* ----- 关键词聚合 ----- */
