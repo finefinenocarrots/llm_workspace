@@ -355,6 +355,34 @@
     buildRank('tbl-owner', T.o, I.o, DIM.o, mList, mS, mE, ds, '负责人');
     buildRank('tbl-country', T.c, I.c, DIM.c, mList, mS, mE, ds, '国家');
   }
+
+  // 指定维度值 k 在窗口 [s,e] 内的实际 TACOS（尊重其他全局筛选，但仅取该维度值本身）
+  function tacosValWindow(k, dimIdx, ds, s, e) {
+    const iS = lb(dates, s), iE = ub(dates, e) - 1;
+    let adsp = 0, sales = 0;
+    for (const r of DAILY) {
+      if (r[I.d] < iS || r[I.d] > iE) continue;
+      if (ds.o && dimIdx !== I.o && !ds.o.has(r[I.o])) continue;
+      if (ds.s && dimIdx !== I.s && !ds.s.has(r[I.s])) continue;
+      if (ds.c && dimIdx !== I.c && !ds.c.has(r[I.c])) continue;
+      if (ds.g && dimIdx !== I.g && !ds.g.has(r[I.g])) continue;
+      if (r[dimIdx] !== k) continue;
+      adsp += r[I.adsp]; sales += r[I.sales];
+    }
+    return sales > 0 ? adsp / sales : NaN;
+  }
+  function ppDelta(now, prev) {
+    if (!isFinite(now) || !isFinite(prev)) return null;
+    return (now - prev) * 100; // 百分点 pp
+  }
+  function tacosMoMCell(delta) {
+    if (delta === null || !isFinite(delta)) return '<span style="color:#cfd4da">—</span>';
+    if (Math.abs(delta) < 0.1) return `<span class="delta-flat">${delta > 0 ? '+' : ''}${delta.toFixed(1)}pp</span>`;
+    const up = delta > 0;
+    const cls = up ? 'delta-up' : 'delta-down'; // TACOS 升=红(不利) 降=绿(有利)
+    return `<span class="${cls}"><b>${up ? '▲' : '▼'} ${delta > 0 ? '+' : ''}${delta.toFixed(1)}pp</b></span>`;
+  }
+
   function buildRank(elId, tIdx, dIdx, dimArr, mList, mS, mE, ds, dimName) {
     const tgtMap = new Map(), actMap = new Map();
     filterTgtM(mList, ds).forEach(r => {
@@ -379,17 +407,24 @@
       const tt = t.ts > 0 ? t.tp / t.ts : NaN;
       const at = a.sales > 0 ? a.adsp / a.sales : NaN;
       const tacosRate = isFinite(tt) && isFinite(at) && at > 0 ? tt / at : NaN;
-      arr.push({ name: dimArr[k], tgtSp: t.tp, actSp: a.adsp, spendRate, tt, at, tacosRate });
+      arr.push({ key: k, name: dimArr[k], tgtSp: t.tp, actSp: a.adsp, spendRate, tt, at, tacosRate });
     });
     arr.sort((x, y) => (isFinite(y.spendRate) ? y.spendRate : -1) - (isFinite(x.spendRate) ? x.spendRate : -1));
+    // 费比环比（实际 TACOS 对比 昨日 / 上周 / 近 4 周，单位 pp）
+    const dod = k => ppDelta(tacosValWindow(k, dIdx, ds, mE, mE), tacosValWindow(k, dIdx, ds, D.addDays(mE, -1), D.addDays(mE, -1)));
+    const wow = k => ppDelta(tacosValWindow(k, dIdx, ds, D.addDays(mE, -6), mE), tacosValWindow(k, dIdx, ds, D.addDays(mE, -13), D.addDays(mE, -7)));
+    const m4 = k => ppDelta(tacosValWindow(k, dIdx, ds, D.addDays(mE, -27), mE), tacosValWindow(k, dIdx, ds, D.addDays(mE, -55), D.addDays(mE, -28)));
     const el = document.getElementById(elId);
-    el.innerHTML = `<thead><tr><th>${dimName}</th><th>目标花费</th><th>实际花费</th><th>花费完成率</th><th>目标TACOS</th><th>实际TACOS</th><th>费比完成率</th></tr></thead><tbody>` +
+    el.innerHTML = `<thead><tr><th>${dimName}</th><th>目标花费</th><th>实际花费</th><th>花费完成率</th><th>目标TACOS</th><th>实际TACOS</th><th>费比完成率</th><th>费比·昨日</th><th>费比·上周</th><th>费比·4周</th></tr></thead><tbody>` +
       arr.map(x => `<tr>
         <td class="dim">${x.name}</td>
         <td>${F.money(x.tgtSp)}</td><td>${F.money(x.actSp)}</td>
         <td>${rateCell(x.spendRate)}</td>
         <td>${F.pct(x.tt)}</td><td>${F.pct(x.at)}</td>
         <td>${isFinite(x.tacosRate) ? (x.tacosRate >= 1 ? `<span class="tag tag-green">${F.pct(x.tacosRate)}</span>` : `<span class="tag tag-red">${F.pct(x.tacosRate)}</span>`) : '—'}</td>
+        <td>${tacosMoMCell(dod(x.key))}</td>
+        <td>${tacosMoMCell(wow(x.key))}</td>
+        <td>${tacosMoMCell(m4(x.key))}</td>
       </tr>`).join('') + '</tbody>';
   }
   function rateCell(v) {

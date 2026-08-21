@@ -11,6 +11,7 @@
   const dates = DIM.d; // 已排序
   const MIN_D = dates[0], MAX_D = dates[dates.length - 1];
   const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  const WK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // 列展示顺序：周一~周六，周日置末
   const dateWk = dates.map(d => D.parse(d).getDay()); // 0=周日 .. 6=周六
   const WK_METRICS = [
     { key: 'sp',   label: '花费',   dir: 0,  fmt: v => F.money(v) },
@@ -751,24 +752,26 @@
     function cellColor(v) {
       if (!isFinite(v)) return '';
       if (mk.dir === 0) { // 花费/订单：中性蓝，越高越深
-        const a = 0.08 + 0.30 * norm(v);
+        const a = 0.12 + 0.46 * norm(v);
         return `background:rgba(51,96,140,${a.toFixed(2)})`;
       }
       let t = norm(v); // 1=最大值
       if (mk.dir === -1) t = 1 - t; // 越低越好 → 反转
-      // t: 1=最优(绿 58,143,108) 0=最差(红 192,69,62)
-      const r = Math.round(192 + (58 - 192) * t);
-      const g = Math.round(69 + (143 - 69) * t);
-      const b = Math.round(62 + (108 - 62) * t);
-      const al = 0.10 + 0.34 * Math.abs(t - 0.5) * 2;
+      // 放大偏离中值的差异，使相邻类目对比更明显
+      t = Math.max(0, Math.min(1, 0.5 + (t - 0.5) * 1.35));
+      // t: 1=最优(绿 46,138,101) 0=最差(红 201,62,55)
+      const r = Math.round(201 + (46 - 201) * t);
+      const g = Math.round(62 + (138 - 62) * t);
+      const b = Math.round(55 + (101 - 55) * t);
+      const al = 0.16 + 0.56 * Math.abs(t - 0.5) * 2;
       return `background:rgba(${r},${g},${b},${al.toFixed(2)})`;
     }
-    const thead = '<thead><tr><th>类目</th>' + WEEK.map(w => `<th>${w}</th>`).join('') + '<th>周均</th></tr></thead>';
+    const thead = '<thead><tr><th>类目</th>' + WK_ORDER.map(i => `<th>${WEEK[i]}</th>`).join('') + '<th>周均</th></tr></thead>';
     const tbody = '<tbody>' + rows.map(r => {
       const valid = r.cells.filter(v => isFinite(v));
       const avg = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : NaN;
       return '<tr><td class="dim">' + esc(DIM.g[r.g]) + '</td>' +
-        r.cells.map(v => `<td style="${cellColor(v)}">${isFinite(v) ? mk.fmt(v) : '—'}</td>`).join('') +
+        WK_ORDER.map(i => `<td style="${cellColor(r.cells[i])}">${isFinite(r.cells[i]) ? mk.fmt(r.cells[i]) : '—'}</td>`).join('') +
         `<td style="font-weight:600">${isFinite(avg) ? mk.fmt(avg) : '—'}</td></tr>`;
     }).join('') + '</tbody>';
     el.innerHTML = thead + tbody;

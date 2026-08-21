@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>广告目标达成看板 · 跨境电商广告分析</title>
-<link rel="stylesheet" href="assets/common.css?v=20260821d1">
+<link rel="stylesheet" href="assets/common.css?v=20260821d2">
 </head>
 <body>
 <header class="topbar">
@@ -60,15 +60,13 @@
     <h3>类目费比目标完成率 <span class="hint">当月 · 实际TACOS ≤ 目标TACOS 为达标</span></h3>
     <div id="ch-cat" class="chart chart-lg"></div>
   </div>
-  <div class="grid g-2" style="margin-top:16px">
-    <div class="card">
-      <h3>负责人：花费与费比完成率排行</h3>
-      <div class="tbl-wrap" style="max-height:380px;overflow-y:auto"><table class="tbl" id="tbl-owner"></table></div>
-    </div>
-    <div class="card">
-      <h3>国家：花费与费比完成率</h3>
-      <div class="tbl-wrap" style="max-height:380px;overflow-y:auto"><table class="tbl" id="tbl-country"></table></div>
-    </div>
+  <div class="card" style="margin-top:16px">
+    <h3>负责人：花费与费比完成率排行 <span class="hint">费比环比 = 实际 TACOS 对比 昨日 / 上周 / 近 4 周（▲ 费比升=红，▼ 费比降=绿）</span></h3>
+    <div class="tbl-wrap" style="max-height:380px;overflow-y:auto"><table class="tbl" id="tbl-owner"></table></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>国家：花费与费比完成率 <span class="hint">费比环比 = 实际 TACOS 对比 昨日 / 上周 / 近 4 周（▲ 费比升=红，▼ 费比降=绿）</span></h3>
+    <div class="tbl-wrap" style="max-height:380px;overflow-y:auto"><table class="tbl" id="tbl-country"></table></div>
   </div>
 
   <!-- 模块3 近14天变动趋势 -->
@@ -101,8 +99,8 @@
 </div>
 
 <script src="assets/echarts.min.js"></script>
-<script src="data/tg_data.js?v=20260821d1"></script>
-<script src="assets/common.js?v=20260821d1"></script>
-<script src="assets/target.js?v=20260821d1"></script>
+<script src="data/tg_data.js?v=20260821d2"></script>
+<script src="assets/common.js?v=20260821d2"></script>
+<script src="assets/target.js?v=20260821d2"></script>
 </body>
 </html>
