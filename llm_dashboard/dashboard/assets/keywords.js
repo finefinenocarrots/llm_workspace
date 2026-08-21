@@ -264,7 +264,7 @@
 
     const tbody = '<tbody>' + list.map(k => `
       <tr data-kw="${esc(k.kw)}">
-        <td class="dim" title="${esc(Array.from(k.camps).join('\n'))}">${esc(k.kw)}</td>
+        <td class="dim kw-name" title="${esc(Array.from(k.camps).join('\n'))}">${esc(k.kw)}</td>
         <td><span class="cls-tag">${esc(k.cls)}</span></td>
         <td class="text-right">${k.camps.size}</td>
         <td class="text-right">${F.num(k.im, 0)}</td>
@@ -324,7 +324,7 @@
     };
     document.querySelector('#tbl-kw tbody').innerHTML = list.map(k => `
       <tr data-kw="${esc(k.kw)}">
-        <td class="dim" title="${esc(Array.from(k.camps).join('\n'))}">${esc(k.kw)}</td>
+        <td class="dim kw-name" title="${esc(Array.from(k.camps).join('\n'))}">${esc(k.kw)}</td>
         <td><span class="cls-tag">${esc(k.cls)}</span></td>
         <td class="text-right">${k.camps.size}</td>
         <td class="text-right">${F.num(k.im, 0)}</td>
@@ -362,7 +362,7 @@
         : campList.map(c => `<span onclick="navigator.clipboard.writeText('${esc(c).replace(/'/g,"\\'")}');var t=this;t.style.color='#3b82f6';setTimeout(function(){t.style.color='#475569'},600)" style="cursor:pointer;font-size:11px;color:#475569" title="点击复制">${esc(c.length > 30 ? c.slice(0,30)+'...' : c)}</span>`).join('<br>');
       return `
       <tr data-kw="${esc(k.kw)}">
-        <td class="dim" title="${esc(Array.from(k.camps).join('\n'))}">${esc(k.kw)}</td>
+        <td class="dim kw-name" title="${esc(Array.from(k.camps).join('\n'))}">${esc(k.kw)}</td>
         <td><span class="cls-tag">${esc(k.cls)}</span></td>
         <td class="text-right">${F.money(k.sp)}</td>
         <td class="text-right">${F.num(k.cl, 0)}</td>
@@ -375,7 +375,7 @@
 
     document.getElementById('neg-list').innerHTML =
       `<div class="tbl-wrap" style="max-height:500px"><table class="tbl">${thead}${tbody}</table></div>
-       <div class="footnote" style="margin-top:6px">全选表格 → Ctrl+C → Excel粘贴即用 · 共 ${candidates.length} 个建议否词</div>`;
+       <div class="footnote" style="margin-top:6px">点击关键词复制到剪贴板 · 全选表格 → Ctrl+C → Excel粘贴即用 · 共 ${candidates.length} 个建议否词</div>`;
   }
 
   /* ---------- 联动面板: 关键词匹配方式详情 ---------- */
@@ -455,6 +455,24 @@
     const kwName = row.dataset.kw;
     const found = _kwCache.find(k => k.kw === kwName);
     if (!found) return;
+    // 点击同时复制关键词到剪贴板
+    navigator.clipboard.writeText(kwName).then(() => {
+      const cell = row.querySelector('.kw-name');
+      if (cell) {
+        cell.classList.add('copied');
+        let flag = cell.querySelector('.copy-flag');
+        if (!flag) {
+          flag = document.createElement('span');
+          flag.className = 'copy-flag';
+          flag.textContent = '已复制';
+          cell.appendChild(flag);
+        }
+        setTimeout(() => {
+          cell.classList.remove('copied');
+          if (flag.parentNode) flag.remove();
+        }, 1200);
+      }
+    }).catch(() => {});
     // 点击同一行则关闭面板
     if (selectedKw && selectedKw.kw === kwName) {
       selectedKw = null;
